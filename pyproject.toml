@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "wingz"
+version = "0.1.0"
+description = ""
+authors = ["Joween Flores <hello@joween.dev>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.14"
+django = "^5.2.7"
+djangorestframework = "^3.16.1"
+django-filter = "^25.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
