@@ -28,10 +28,10 @@ cd src
 python manage.py runserver
 ```
 
-### 5. Test the API
+### 5. Run Tests
 ```bash
-# In a new terminal
-python test_api.py
+cd src
+python manage.py test
 ```
 
 ## Documentation
@@ -50,8 +50,12 @@ python test_api.py
 
 ## Features
 
+**Separate Apps Architecture**
+- Users app - Dedicated user management (riders, drivers, admins)
+- Rides app - Ride and event management
+
 **Models**
-- User (riders, drivers, admins)
+- User (in users app)
 - Ride (with pickup/dropoff locations)
 - RideEvent (event tracking)
 
@@ -127,16 +131,22 @@ wingz/
 │   │   ├── settings.py
 │   │   ├── urls.py
 │   │   └── wsgi.py
-│   └── rides/                # Main application
-│       ├── models.py         # User, Ride, RideEvent models
-│       ├── serializers.py    # DRF serializers
-│       ├── views.py          # ViewSets for API endpoints
-│       ├── urls.py           # API routing
-│       ├── admin.py          # Admin configuration
-│       └── migrations/       # Database migrations
+│   ├── users/                # Users application
+│   │   ├── models.py         # User model
+│   │   ├── serializers.py    # User serializer
+│   │   ├── views.py          # User ViewSet
+│   │   ├── urls.py           # User API routing
+│   │   ├── admin.py          # User admin configuration
+│   │   └── migrations/       # User migrations
+│   └── rides/                # Rides application
+│       ├── models.py         # Ride, RideEvent models
+│       ├── serializers.py    # Ride serializers
+│       ├── views.py          # Ride ViewSets
+│       ├── urls.py           # Ride API routing
+│       ├── admin.py          # Ride admin configuration
+│       └── migrations/       # Ride migrations
 ├── docs/
 │   └── API_DOCUMENTATION.md  # Complete API reference
-├── test_api.py               # API test script
 └── README.md                 # This file
 ```
 

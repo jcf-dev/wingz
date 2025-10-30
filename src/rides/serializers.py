@@ -1,33 +1,6 @@
 from rest_framework import serializers
-from .models import User, Ride, RideEvent
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """Serializer for User model"""
-
-    class Meta:
-        model = User
-        fields = [
-            'id_user',
-            'role',
-            'first_name',
-            'last_name',
-            'email',
-            'phone_number'
-        ]
-        read_only_fields = ['id_user']
-
-    def validate_email(self, value):
-        """Validate email uniqueness"""
-        if self.instance:
-            # Update case - exclude current instance
-            if User.objects.exclude(id_user=self.instance.id_user).filter(email=value).exists():
-                raise serializers.ValidationError("A user with this email already exists.")
-        else:
-            # Create case
-            if User.objects.filter(email=value).exists():
-                raise serializers.ValidationError("A user with this email already exists.")
-        return value
+from .models import Ride, RideEvent
+from users.serializers import UserSerializer
 
 
 class RideEventSerializer(serializers.ModelSerializer):
