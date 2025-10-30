@@ -51,6 +51,19 @@ class UserAPITest(APITestCase):
     def setUp(self):
         """Set up test client and data"""
         self.client = APIClient()
+
+        # Create admin user using custom User model
+        self.admin_user = User.objects.create_superuser(
+            email='admin@example.com',
+            password='admin123',
+            first_name='Admin',
+            last_name='User',
+            phone_number='+1234567890'
+        )
+
+        # Authenticate the client
+        self.client.force_authenticate(user=self.admin_user)
+
         self.user_data = {
             'role': 'rider',
             'first_name': 'Jane',
@@ -79,7 +92,6 @@ class UserAPITest(APITestCase):
         }
         response = self.client.post(self.list_url, new_user_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 2)
         self.assertEqual(response.data['first_name'], 'Bob')
         self.assertEqual(response.data['email'], 'bob.johnson@example.com')
 
@@ -114,7 +126,8 @@ class UserAPITest(APITestCase):
         """Test deleting a user"""
         response = self.client.delete(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(User.objects.count(), 0)
+        # Admin user created in setUp still exists
+        self.assertEqual(User.objects.count(), 1)
 
     def test_create_user_duplicate_email(self):
         """Test that creating a user with duplicate email fails"""

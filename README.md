@@ -16,11 +16,13 @@ cd src
 python manage.py migrate
 ```
 
-### 3. Create a Superuser (Optional)
+### 3. Create an Admin User (Required for API Access)
 ```bash
 cd src
 python manage.py createsuperuser
 ```
+
+**Note:** Only admin users can access the API endpoints.
 
 ### 4. Start the Development Server
 ```bash
@@ -42,9 +44,20 @@ python manage.py test
 
 ### Base URL: `http://localhost:8000/api/`
 
+**Authentication Required:** All API endpoints require JWT authentication with admin privileges.
+
+### Authentication
+- **Login**: `POST /api/auth/login/`
+- **Token Refresh**: `POST /api/auth/token/refresh/`
+- **Token Verify**: `POST /api/auth/token/verify/`
+- **Logout**: `POST /api/auth/logout/`
+
+### Protected Endpoints
 - **Users**: `/api/users/`
 - **Rides**: `/api/rides/`
 - **Ride Events**: `/api/ride-events/`
+
+### Other
 - **Admin Panel**: `http://localhost:8000/admin/`
 - **Browsable API**: `http://localhost:8000/api/`
 
@@ -65,6 +78,13 @@ python manage.py test
 - Nested relationships
 - Data validation
 
+**Authentication & Security**
+- JWT (JSON Web Token) authentication
+- Simple JWT implementation
+- Token refresh mechanism
+- Admin-only API access
+- Secure endpoints
+
 **Advanced Features**
 - Filtering (by status, role, etc.)
 - Search (full-text search)
@@ -77,20 +97,84 @@ python manage.py test
 - Custom list displays
 - Search and filters
 
+**Testing**
+- Comprehensive unit tests (47 tests)
+- Model and API tests
+- Test coverage for all endpoints
+
 ## Tech Stack
 
 - **Django 5.2.7**
 - **Django REST Framework 3.16.1**
+- **Django REST Framework Simple JWT** - JWT authentication
+- **dj-rest-auth** - Authentication endpoints
 - **Django Filter 25.2**
 - **Python 3.14**
 - **Poetry** (dependency management)
 
+## Authentication
+
+The API uses **JWT (JSON Web Token)** authentication with a **custom User model**. Only users with `role='admin'` can access the API endpoints.
+
+### Custom User Model
+
+- **Email-based authentication** (no username)
+- **Role field** determines access ('admin', 'rider', 'driver')
+- Only users with `role='admin'` can access API
+
+### Quick Start
+
+1. **Create an admin user:**
+   ```bash
+   python manage.py createsuperuser
+   ```
+   This creates a user with `role='admin'` automatically.
+
+2. **Get JWT token:**
+   ```bash
+   curl -X POST http://localhost:8000/api/auth/login/ \
+     -H "Content-Type: application/json" \
+     -d '{"email": "admin@example.com", "password": "your_password"}'
+   ```
+   Note: Use `email` instead of `username`.
+
+3. **Use token in requests:**
+   ```bash
+   curl http://localhost:8000/api/users/ \
+     -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+   ```
+
+See [API Documentation](docs/API_DOCUMENTATION.md) for detailed authentication information.
+
 ## Example Usage
 
-### Create a Rider
+### Step 1: Login and Get JWT Token
+```bash
+curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "your_password"
+  }'
+```
+
+Note: Use `email` instead of `username`.
+
+Response:
+```json
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}
+```
+
+### Step 2: Use Access Token for API Requests
+
+#### Create a Rider
 ```bash
 curl -X POST http://localhost:8000/api/users/ \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -d '{
     "role": "rider",
     "first_name": "John",
@@ -100,10 +184,11 @@ curl -X POST http://localhost:8000/api/users/ \
   }'
 ```
 
-### Create a Ride
+#### Create a Ride
 ```bash
 curl -X POST http://localhost:8000/api/rides/ \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -d '{
     "status": "en-route",
     "id_rider": 1,
@@ -116,9 +201,19 @@ curl -X POST http://localhost:8000/api/rides/ \
   }'
 ```
 
-### List Rides with Filters
+#### List Rides with Filters
 ```bash
-curl http://localhost:8000/api/rides/?status=en-route&ordering=-pickup_time
+curl http://localhost:8000/api/rides/?status=en-route&ordering=-pickup_time \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### Step 3: Refresh Token When Expired
+```bash
+curl -X POST http://localhost:8000/api/auth/token/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh": "YOUR_REFRESH_TOKEN"
+  }'
 ```
 
 ## Project Structure
@@ -149,19 +244,3 @@ wingz/
 │   └── API_DOCUMENTATION.md  # Complete API reference
 └── README.md                 # This file
 ```
-
-## Requirements Met
-
-- Django REST Framework utilized  
-- Models created for Ride, User, and RideEvent  
-- Serializers implemented for JSON serialization/deserialization  
-- ViewSets for managing CRUD operations  
-
-## License
-
-MIT
-
-## Author
-
-Joween Flores <hello@joween.dev>
-Simple Ride API written in Python

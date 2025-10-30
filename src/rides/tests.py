@@ -113,7 +113,22 @@ class RideAPITest(APITestCase):
 
     def setUp(self):
         """Set up test client and data"""
+        from users.models import User as CustomUser
+
         self.client = APIClient()
+
+        # Create admin user using custom User model
+        self.admin_user = CustomUser.objects.create_superuser(
+            email='admin@example.com',
+            password='admin123',
+            first_name='Admin',
+            last_name='User',
+            phone_number='+1234567890'
+        )
+
+        # Authenticate the client
+        self.client.force_authenticate(user=self.admin_user)
+
         self.rider = User.objects.create(
             role='rider',
             first_name='John',
@@ -291,7 +306,22 @@ class RideEventAPITest(APITestCase):
 
     def setUp(self):
         """Set up test client and data"""
+        from users.models import User as CustomUser
+
         self.client = APIClient()
+
+        # Create admin user using custom User model
+        self.admin_user = CustomUser.objects.create_superuser(
+            email='admin_event@example.com',
+            password='admin123',
+            first_name='Admin',
+            last_name='Event',
+            phone_number='+1234567890'
+        )
+
+        # Authenticate the client
+        self.client.force_authenticate(user=self.admin_user)
+
         self.rider = User.objects.create(
             role='rider',
             first_name='John',

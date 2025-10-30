@@ -26,9 +26,98 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+## Authentication
+
+The API uses JWT (JSON Web Token) authentication with a custom User model. Only users with `role='admin'` can access the API endpoints.
+
+### Custom User Model
+
+The application uses a custom User model with the following fields:
+- `email` - Used as username (unique)
+- `role` - User role: 'admin', 'rider', or 'driver'
+- `first_name`, `last_name`, `phone_number` - User information
+- `password` - Hashed password
+
+**Important:** Only users with `role='admin'` can access the API endpoints.
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login/` | Login and obtain JWT tokens |
+| POST | `/api/auth/token/refresh/` | Refresh access token |
+| POST | `/api/auth/token/verify/` | Verify token validity |
+| POST | `/api/auth/logout/` | Logout (invalidate tokens) |
+
+### Obtaining JWT Tokens
+
+**Login Request:**
+```bash
+curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "your_password"
+  }'
+```
+
+**Note:** Use `email` field instead of `username` for authentication.
+
+**Response:**
+```json
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}
+```
+
+### Using JWT Tokens
+
+Include the access token in the Authorization header for all API requests:
+
+```bash
+curl -X GET http://localhost:8000/api/users/ \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc..."
+```
+
+### Token Lifetime
+
+- **Access Token**: 1 hour
+- **Refresh Token**: 1 day
+
+### Refreshing Tokens
+
+When the access token expires, use the refresh token to obtain a new access token:
+
+```bash
+curl -X POST http://localhost:8000/api/auth/token/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+  }'
+```
+
+### Creating Admin User
+
+To create an admin user who can access the API:
+
+```bash
+python manage.py createsuperuser
+```
+
+This will prompt for:
+- Email (used as username)
+- First name
+- Last name
+- Password
+
+The user will automatically be created with `role='admin'`.
+
 ## API Endpoints
 
 Base URL: `http://localhost:8000/api/`
+
+**Note:** All endpoints below require authentication with admin privileges.
 
 ### Users
 
@@ -52,8 +141,23 @@ Base URL: `http://localhost:8000/api/`
 - `phone_number` (string)
 
 **Example POST Request:**
+```bash
+curl -X POST http://localhost:8000/api/users/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "role": "rider",
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com",
+    "phone_number": "+1234567890"
+  }'
+```
+
+**Example Response:**
 ```json
 {
+  "id_user": 1,
   "role": "rider",
   "first_name": "John",
   "last_name": "Doe",
