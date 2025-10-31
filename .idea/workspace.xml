@@ -4,31 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="feb9958b-bb93-41da-9d25-21d7c67af4df" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/poetry.lock" beforeDir="false" afterPath="$PROJECT_DIR$/poetry.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/core/asgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/core/asgi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/core/permissions.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/core/permissions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/core/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/core/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/core/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/core/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/core/wsgi.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/core/wsgi.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/load_dummy_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/load_dummy_data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/manage.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/manage.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/rides/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/rides/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/rides/apps.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/rides/apps.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/rides/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/rides/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/rides/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/rides/serializers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/rides/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/rides/tests.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/rides/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/rides/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/rides/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/rides/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/users/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/users/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/users/apps.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/users/apps.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/users/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/users/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/users/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/users/serializers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/users/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/users/tests.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/users/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/users/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/users/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/users/views.py" afterDir="false" />
-    </list>
+    <list default="true" id="feb9958b-bb93-41da-9d25-21d7c67af4df" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -267,7 +243,7 @@
       <workItem from="1761694547535" duration="275000" />
       <workItem from="1761694835712" duration="311000" />
       <workItem from="1761705725637" duration="7619000" />
-      <workItem from="1761915532836" duration="1905000" />
+      <workItem from="1761915532836" duration="2442000" />
     </task>
     <servers />
   </component>
