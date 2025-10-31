@@ -95,6 +95,8 @@ class UserAPITest(APITestCase):
             "last_name": "Johnson",
             "email": "bob.johnson@example.com",
             "phone_number": "+1234567892",
+            "password": "SecurePassword123!",
+            "password_confirm": "SecurePassword123!",
         }
         response = self.client.post(self.list_url, new_user_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

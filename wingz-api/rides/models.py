@@ -1,13 +1,28 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import User
 
 
 class Ride(models.Model):
     """Ride model representing ride requests and their details"""
 
+    STATUS_CHOICES = [
+        ("requested", "Requested"),
+        ("accepted", "Accepted"),
+        ("en-route", "En Route to Pickup"),
+        ("pickup", "At Pickup"),
+        ("in-progress", "In Progress"),
+        ("dropoff", "At Dropoff"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
     id = models.AutoField(primary_key=True)
     status = models.CharField(
-        max_length=50, help_text="Ride status (e.g., 'en-route', 'pickup', 'dropoff')"
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default="requested",
+        help_text="Ride status (e.g., 'en-route', 'pickup', 'dropoff')",
     )
     rider = models.ForeignKey(
         User,
@@ -21,10 +36,18 @@ class Ride(models.Model):
         related_name="rides_as_driver",
         db_column="driver_id",
     )
-    pickup_latitude = models.FloatField()
-    pickup_longitude = models.FloatField()
-    dropoff_latitude = models.FloatField()
-    dropoff_longitude = models.FloatField()
+    pickup_latitude = models.FloatField(
+        validators=[MinValueValidator(-90), MaxValueValidator(90)]
+    )
+    pickup_longitude = models.FloatField(
+        validators=[MinValueValidator(-180), MaxValueValidator(180)]
+    )
+    dropoff_latitude = models.FloatField(
+        validators=[MinValueValidator(-90), MaxValueValidator(90)]
+    )
+    dropoff_longitude = models.FloatField(
+        validators=[MinValueValidator(-180), MaxValueValidator(180)]
+    )
     pickup_time = models.DateTimeField()
 
     class Meta:
@@ -49,7 +72,7 @@ class RideEvent(models.Model):
     ride = models.ForeignKey(
         Ride, on_delete=models.CASCADE, related_name="events", db_column="ride_id"
     )
-    description = models.CharField(max_length=255)
+    description = models.CharField(max_length=255, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

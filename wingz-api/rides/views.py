@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Prefetch, F, ExpressionWrapper, FloatField
 from django.db.models.functions import ACos, Cos, Sin, Radians
+from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
 from .models import Ride, RideEvent
@@ -111,9 +112,21 @@ class RideViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def add_event(self, request, pk=None):
-        """Add an event to a specific ride"""
-        ride = self.get_object()
+        """Add an event to a specific ride with transaction protection"""
+        ride = Ride.objects.select_for_update().get(pk=pk)
+
+        MAX_EVENTS_PER_RIDE = 1000
+        event_count = ride.events.count()
+        if event_count >= MAX_EVENTS_PER_RIDE:
+            return Response(
+                {
+                    "error": f"Maximum number of events ({MAX_EVENTS_PER_RIDE}) reached for this ride."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = RideEventSerializer(
             data={"ride": ride.id, "description": request.data.get("description")}
         )
