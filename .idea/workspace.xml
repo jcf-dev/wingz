@@ -6,8 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="feb9958b-bb93-41da-9d25-21d7c67af4df" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs/API_DOCUMENTATION.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/API_DOCUMENTATION.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/users/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/users/admin.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -247,7 +248,7 @@
       <workItem from="1761694547535" duration="275000" />
       <workItem from="1761694835712" duration="311000" />
       <workItem from="1761705725637" duration="7619000" />
-      <workItem from="1761915532836" duration="8391000" />
+      <workItem from="1761915532836" duration="8543000" />
     </task>
     <servers />
   </component>

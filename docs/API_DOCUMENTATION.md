@@ -18,7 +18,7 @@ poetry install
 3. Run migrations:
 ```bash
 cd wingz-api
-python manage.py makemigrations
+python manage.py migrations
 python manage.py migrate
 ```
 

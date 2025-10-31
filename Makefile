@@ -32,11 +32,11 @@ migrate:
 	@echo "Running database migrations..."
 	cd wingz-api && poetry run python manage.py migrate
 
-makemigrations:
+migrations:
 	@echo "Creating new migrations..."
 	cd wingz-api && poetry run python manage.py makemigrations
 
-createsuperuser:
+superuser:
 	@echo "Creating superuser..."
 	cd wingz-api && poetry run python manage.py createsuperuser
 
@@ -64,4 +64,4 @@ format-check:
 quality: format lint
 	@echo "Code quality checks completed!"
 
-.PHONY: up clean rebuild env migrate makemigrations createsuperuser runserver test lint format format-check quality
+.PHONY: up clean rebuild env migrate migrations superuser runserver test lint format format-check quality
