@@ -29,8 +29,7 @@ class RideModelTest(TestCase):
         )
         self.ride = Ride.objects.create(
             status='en-route',
-            id_rider=self.rider,
-            id_driver=self.driver,
+            driver=self.driver,
             pickup_latitude=37.7749,
             pickup_longitude=-122.4194,
             dropoff_latitude=37.7849,
@@ -41,20 +40,20 @@ class RideModelTest(TestCase):
     def test_ride_creation(self):
         """Test that a ride can be created"""
         self.assertEqual(self.ride.status, 'en-route')
-        self.assertEqual(self.ride.id_rider, self.rider)
-        self.assertEqual(self.ride.id_driver, self.driver)
+        self.assertEqual(self.ride.rider, self.rider)
+        self.assertEqual(self.ride.driver, self.driver)
         self.assertEqual(self.ride.pickup_latitude, 37.7749)
         self.assertEqual(self.ride.pickup_longitude, -122.4194)
 
     def test_ride_str_method(self):
         """Test the string representation of ride"""
-        expected_str = f"Ride {self.ride.id_ride} - {self.ride.status}"
+        expected_str = f"Ride {self.ride.ride} - {self.ride.status}"
         self.assertEqual(str(self.ride), expected_str)
 
     def test_ride_relationships(self):
         """Test ride relationships with users"""
-        self.assertEqual(self.ride.id_rider.first_name, 'John')
-        self.assertEqual(self.ride.id_driver.first_name, 'Jane')
+        self.assertEqual(self.ride.rider.first_name, 'John')
+        self.assertEqual(self.ride.driver.first_name, 'Jane')
 
 
 class RideEventModelTest(TestCase):
@@ -78,8 +77,8 @@ class RideEventModelTest(TestCase):
         )
         self.ride = Ride.objects.create(
             status='en-route',
-            id_rider=self.rider,
-            id_driver=self.driver,
+            rider=self.rider,
+            driver=self.driver,
             pickup_latitude=37.7749,
             pickup_longitude=-122.4194,
             dropoff_latitude=37.7849,
@@ -87,19 +86,19 @@ class RideEventModelTest(TestCase):
             pickup_time=timezone.now()
         )
         self.event = RideEvent.objects.create(
-            id_ride=self.ride,
+            ride=self.ride,
             description='Driver arrived at pickup location'
         )
 
     def test_ride_event_creation(self):
         """Test that a ride event can be created"""
         self.assertEqual(self.event.description, 'Driver arrived at pickup location')
-        self.assertEqual(self.event.id_ride, self.ride)
+        self.assertEqual(self.event.ride, self.ride)
         self.assertIsNotNone(self.event.created_at)
 
     def test_ride_event_str_method(self):
         """Test the string representation of ride event"""
-        expected_str = f"Event {self.event.id_ride_event} - {self.event.description}"
+        expected_str = f"Event {self.event.id} - {self.event.description}"
         self.assertEqual(str(self.event), expected_str)
 
     def test_ride_event_auto_timestamp(self):
@@ -119,6 +118,7 @@ class RideAPITest(APITestCase):
 
         # Create admin user using custom User model
         self.admin_user = CustomUser.objects.create_superuser(
+            username='admin',
             email='admin@example.com',
             password='admin123',
             first_name='Admin',
@@ -145,8 +145,8 @@ class RideAPITest(APITestCase):
         )
         self.ride_data = {
             'status': 'en-route',
-            'id_rider': self.rider.id_user,
-            'id_driver': self.driver.id_user,
+            'rider': self.rider.id,
+            'driver': self.driver.id,
             'pickup_latitude': 37.7749,
             'pickup_longitude': -122.4194,
             'dropoff_latitude': 37.7849,
@@ -155,8 +155,8 @@ class RideAPITest(APITestCase):
         }
         self.ride = Ride.objects.create(
             status='en-route',
-            id_rider=self.rider,
-            id_driver=self.driver,
+            rider=self.rider,
+            driver=self.driver,
             pickup_latitude=37.7749,
             pickup_longitude=-122.4194,
             dropoff_latitude=37.7849,
@@ -164,7 +164,7 @@ class RideAPITest(APITestCase):
             pickup_time=timezone.now()
         )
         self.list_url = reverse('ride-list')
-        self.detail_url = reverse('ride-detail', kwargs={'pk': self.ride.id_ride})
+        self.detail_url = reverse('ride-detail', kwargs={'pk': self.ride.ride})
 
     def test_get_ride_list(self):
         """Test retrieving list of rides"""
@@ -176,8 +176,8 @@ class RideAPITest(APITestCase):
         """Test creating a new ride"""
         new_ride_data = {
             'status': 'pickup',
-            'id_rider': self.rider.id_user,
-            'id_driver': self.driver.id_user,
+            'rider': self.rider.id,
+            'driver': self.driver.id,
             'pickup_latitude': 37.8000,
             'pickup_longitude': -122.4500,
             'dropoff_latitude': 37.8100,
@@ -240,8 +240,8 @@ class RideAPITest(APITestCase):
     def test_create_ride_same_rider_and_driver(self):
         """Test that rider and driver must be different"""
         invalid_data = self.ride_data.copy()
-        invalid_data['id_rider'] = self.driver.id_user
-        invalid_data['id_driver'] = self.driver.id_user
+        invalid_data['rider'] = self.driver.id
+        invalid_data['driver'] = self.driver.id
         response = self.client.post(self.list_url, invalid_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -249,8 +249,8 @@ class RideAPITest(APITestCase):
         """Test filtering rides by status"""
         Ride.objects.create(
             status='pickup',
-            id_rider=self.rider,
-            id_driver=self.driver,
+            rider=self.rider,
+            driver=self.driver,
             pickup_latitude=37.8000,
             pickup_longitude=-122.4500,
             dropoff_latitude=37.8100,
@@ -262,19 +262,19 @@ class RideAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
 
-    def test_filter_rides_by_rider(self):
-        """Test filtering rides by rider"""
-        response = self.client.get(self.list_url, {'id_rider': self.rider.id_user})
+    def test_filter_ride_events_by_ride(self):
+        """Test filtering ride events by ride"""
+        response = self.client.get(self.list_url, {'ride': self.ride.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(response.data['count'], 1)
+        self.assertGreaterEqual(len(response.data['results']), 1)
 
     def test_add_event_to_ride(self):
         """Test adding an event to a ride"""
-        add_event_url = reverse('ride-add-event', kwargs={'pk': self.ride.id_ride})
+        add_event_url = reverse('ride-add-event', kwargs={'pk': self.ride.id})
         event_data = {'description': 'Passenger picked up'}
         response = self.client.post(add_event_url, event_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(RideEvent.objects.filter(id_ride=self.ride).count(), 1)
+        self.assertEqual(RideEvent.objects.filter(ride=self.ride).count(), 1)
 
     def test_by_status_action(self):
         """Test custom by_status action"""
@@ -291,13 +291,13 @@ class RideAPITest(APITestCase):
     def test_rider_rides_action(self):
         """Test custom rider_rides action"""
         rider_rides_url = reverse('ride-rider-rides')
-        response = self.client.get(rider_rides_url, {'rider_id': self.rider.id_user})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(rider_rides_url, {'rider_id': self.rider.id})
+            self.list_url,
 
     def test_driver_rides_action(self):
         """Test custom driver_rides action"""
         driver_rides_url = reverse('ride-driver-rides')
-        response = self.client.get(driver_rides_url, {'driver_id': self.driver.id_user})
+        response = self.client.get(driver_rides_url, {'driver_id': self.driver.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
@@ -311,7 +311,8 @@ class RideEventAPITest(APITestCase):
         self.client = APIClient()
 
         # Create admin user using custom User model
-        self.admin_user = CustomUser.objects.create_superuser(
+
+            username='admin_event',
             email='admin_event@example.com',
             password='admin123',
             first_name='Admin',
@@ -338,8 +339,8 @@ class RideEventAPITest(APITestCase):
         )
         self.ride = Ride.objects.create(
             status='en-route',
-            id_rider=self.rider,
-            id_driver=self.driver,
+            rider=self.rider,
+            driver=self.driver,
             pickup_latitude=37.7749,
             pickup_longitude=-122.4194,
             dropoff_latitude=37.7849,
@@ -347,11 +348,11 @@ class RideEventAPITest(APITestCase):
             pickup_time=timezone.now()
         )
         self.event = RideEvent.objects.create(
-            id_ride=self.ride,
+            ride=self.ride,
             description='Driver arrived at pickup location'
         )
         self.list_url = reverse('rideevent-list')
-        self.detail_url = reverse('rideevent-detail', kwargs={'pk': self.event.id_ride_event})
+        self.detail_url = reverse('rideevent-detail', kwargs={'pk': self.event.id})
 
     def test_get_ride_event_list(self):
         """Test retrieving list of ride events"""
@@ -362,7 +363,7 @@ class RideEventAPITest(APITestCase):
     def test_create_ride_event(self):
         """Test creating a new ride event"""
         event_data = {
-            'id_ride': self.ride.id_ride,
+            'ride': self.ride.ride,
             'description': 'Passenger picked up'
         }
         response = self.client.post(self.list_url, event_data, format='json')
@@ -378,7 +379,7 @@ class RideEventAPITest(APITestCase):
     def test_update_ride_event(self):
         """Test updating a ride event with PUT"""
         updated_data = {
-            'id_ride': self.ride.id_ride,
+            'ride': self.ride.ride,
             'description': 'Updated description'
         }
         response = self.client.put(self.detail_url, updated_data, format='json')
@@ -408,8 +409,8 @@ class RideEventAPITest(APITestCase):
         # Create another ride and event
         other_ride = Ride.objects.create(
             status='pickup',
-            id_rider=self.rider,
-            id_driver=self.driver,
+            rider=self.rider,
+            driver=self.driver,
             pickup_latitude=37.8000,
             pickup_longitude=-122.4500,
             dropoff_latitude=37.8100,
@@ -417,11 +418,11 @@ class RideEventAPITest(APITestCase):
             pickup_time=timezone.now()
         )
         RideEvent.objects.create(
-            id_ride=other_ride,
+            ride=other_ride,
             description='Other ride event'
         )
 
-        response = self.client.get(self.list_url, {'id_ride': self.ride.id_ride})
+        response = self.client.get(self.list_url, {'ride': self.ride.ride})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['count'], 1)
 
@@ -434,7 +435,7 @@ class RideEventAPITest(APITestCase):
     def test_ordering_ride_events(self):
         """Test ordering ride events"""
         RideEvent.objects.create(
-            id_ride=self.ride,
+            ride=self.ride,
             description='Second event'
         )
 

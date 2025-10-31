@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id_user',
+            'id',
             'username',
             'email',
             'role',
@@ -16,13 +16,13 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'phone_number'
         ]
-        read_only_fields = ['id_user']
+        read_only_fields = ['id']
 
     def validate_username(self, value):
         """Validate username uniqueness"""
         if self.instance:
             # Update case - exclude current instance
-            if User.objects.exclude(id_user=self.instance.id_user).filter(username=value).exists():
+            if User.objects.exclude(id=self.instance.id).filter(username=value).exists():
                 raise serializers.ValidationError("A user with this username already exists.")
         else:
             # Create case
@@ -34,7 +34,7 @@ class UserSerializer(serializers.ModelSerializer):
         """Validate email uniqueness"""
         if self.instance:
             # Update case - exclude current instance
-            if User.objects.exclude(id_user=self.instance.id_user).filter(email=value).exists():
+            if User.objects.exclude(id=self.instance.id).filter(email=value).exists():
                 raise serializers.ValidationError("A user with this email already exists.")
         else:
             # Create case

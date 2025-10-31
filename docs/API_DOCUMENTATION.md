@@ -199,18 +199,47 @@ curl -X POST http://localhost:8000/api/users/ \
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/rides/` | List all rides |
+| GET | `/api/rides/` | List all rides (optimized, returns today's events only) |
 | POST | `/api/rides/` | Create a new ride |
-| GET | `/api/rides/{id}/` | Get a specific ride (with events) |
+| GET | `/api/rides/{id}/` | Get a specific ride (with all events) |
 | PUT | `/api/rides/{id}/` | Update a ride |
 | PATCH | `/api/rides/{id}/` | Partially update a ride |
 | DELETE | `/api/rides/{id}/` | Delete a ride |
 | POST | `/api/rides/{id}/add_event/` | Add an event to a ride |
-| GET | `/api/rides/by_status/?status=en-route` | Get rides by status |
-| GET | `/api/rides/rider_rides/?rider_id=1` | Get rides for a specific rider |
-| GET | `/api/rides/driver_rides/?driver_id=2` | Get rides for a specific driver |
 
-**Ride Fields:**
+#### Ride List API - Performance Optimized
+
+The ride list API (`GET /api/rides/`) is highly optimized for performance with the following features:
+
+**Query Optimization:**
+- Uses `select_related` for rider and driver (1 query)
+- Uses `prefetch_related` for today's ride events only (1 query)
+- Total: **2-3 database queries** (including pagination count)
+- Never retrieves full list of RideEvents for performance
+
+**Filtering:**
+- `status` - Filter by ride status (e.g., `?status=en-route`)
+- `rider_email` - Filter by rider's email address (e.g., `?rider_email=john@example.com`)
+
+**Sorting:**
+- `pickup_time` - Sort by pickup time (e.g., `?ordering=pickup_time` or `?ordering=-pickup_time`)
+- `distance` - Sort by distance to pickup location (requires GPS coordinates)
+
+**Distance-Based Sorting:**
+
+To sort rides by distance to a GPS position, provide `latitude`, `longitude`, and `ordering=distance`:
+
+```bash
+GET /api/rides/?latitude=37.7749&longitude=-122.4194&ordering=distance
+```
+
+This uses the **Haversine formula** in the database for efficient distance calculation, with support for:
+- Ascending order: `?ordering=distance`
+- Descending order: `?ordering=-distance`
+- Works with pagination
+- Uses database indexes on pickup coordinates for optimal performance
+
+**Ride List Fields:**
 - `id_ride` (read-only)
 - `status` (string: 'en-route', 'pickup', 'dropoff')
 - `id_rider` (integer, foreign key to User)
@@ -220,11 +249,97 @@ curl -X POST http://localhost:8000/api/users/ \
 - `dropoff_latitude` (float, -90 to 90)
 - `dropoff_longitude` (float, -180 to 180)
 - `pickup_time` (datetime)
-- `events` (read-only, nested)
-- `rider_details` (read-only, nested)
-- `driver_details` (read-only, nested)
+- `rider_details` (object, nested User data)
+- `driver_details` (object, nested User data)
+- `todays_ride_events` (array, only events from last 24 hours)
+- `distance_to_pickup` (float, in km, only present when GPS coords provided)
 
-**Example POST Request:**
+**Ride Detail Fields (GET /api/rides/{id}/):**
+- All fields from list, plus:
+- `events` (array, all ride events)
+
+**Example Requests:**
+
+List all rides:
+```bash
+GET /api/rides/
+```
+
+Filter by status:
+```bash
+GET /api/rides/?status=en-route
+```
+
+Filter by rider email:
+```bash
+GET /api/rides/?rider_email=john@example.com
+```
+
+Sort by pickup time (descending):
+```bash
+GET /api/rides/?ordering=-pickup_time
+```
+
+Sort by distance to pickup location:
+```bash
+GET /api/rides/?latitude=37.7749&longitude=-122.4194&ordering=distance
+```
+
+Combined filtering and sorting:
+```bash
+GET /api/rides/?status=en-route&rider_email=john@example.com&ordering=pickup_time&page=1
+```
+
+**Example Response:**
+```json
+{
+  "count": 100,
+  "next": "http://localhost:8000/api/rides/?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id_ride": 1,
+      "status": "en-route",
+      "id_rider": 1,
+      "id_driver": 2,
+      "pickup_latitude": 37.7749,
+      "pickup_longitude": -122.4194,
+      "dropoff_latitude": 37.7849,
+      "dropoff_longitude": -122.4094,
+      "pickup_time": "2025-10-30T10:00:00Z",
+      "rider_details": {
+        "id_user": 1,
+        "username": "johndoe",
+        "email": "john@example.com",
+        "role": "rider",
+        "first_name": "John",
+        "last_name": "Doe",
+        "phone_number": "+1234567890"
+      },
+      "driver_details": {
+        "id_user": 2,
+        "username": "janedoe",
+        "email": "jane@example.com",
+        "role": "driver",
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "phone_number": "+0987654321"
+      },
+      "todays_ride_events": [
+        {
+          "id_ride_event": 1,
+          "id_ride": 1,
+          "description": "Driver arrived at pickup",
+          "created_at": "2025-10-31T09:30:00Z"
+        }
+      ],
+      "distance_to_pickup": 2.5
+    }
+  ]
+}
+```
+
+**Example POST Request (Create Ride):**
 ```json
 {
   "status": "en-route",
@@ -274,12 +389,23 @@ All list endpoints support filtering, searching, and ordering:
 
 Example: `/api/users/?role=rider&search=john&ordering=username`
 
-### Rides
-- **Filter by:** `status`, `id_rider`, `id_driver`
-- **Search in:** `status`
-- **Order by:** `id_ride`, `pickup_time`, `status`
+### Rides (Optimized)
+- **Filter by:** 
+  - `status` - Ride status (indexed for performance)
+  - `rider_email` - Rider's email address (uses indexed email field)
+- **Order by:** 
+  - `pickup_time` - Sort by pickup time (indexed for performance)
+  - `distance` - Sort by distance to pickup (requires `latitude` and `longitude` params)
+  - Use `-` prefix for descending order (e.g., `-pickup_time`)
 
-Example: `/api/rides/?status=en-route&ordering=-pickup_time`
+**Performance Notes:**
+- All filtering and sorting uses database indexes for optimal performance
+- Distance sorting uses Haversine formula calculated in the database
+- Pagination is fully supported with all sorting options
+
+Example: `/api/rides/?status=en-route&rider_email=john@example.com&ordering=-pickup_time`
+
+Example with distance: `/api/rides/?latitude=37.7749&longitude=-122.4194&ordering=distance&page=1`
 
 ### Ride Events
 - **Filter by:** `id_ride`

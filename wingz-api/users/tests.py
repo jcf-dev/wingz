@@ -11,6 +11,7 @@ class UserModelTest(TestCase):
     def setUp(self):
         """Set up test data"""
         self.user_data = {
+            'username': 'johndoe',
             'role': 'rider',
             'first_name': 'John',
             'last_name': 'Doe',
@@ -40,9 +41,9 @@ class UserModelTest(TestCase):
             User.objects.create(**duplicate_data)
 
     def test_user_primary_key(self):
-        """Test that id_user is the primary key"""
-        self.assertIsNotNone(self.user.id_user)
-        self.assertEqual(self.user.pk, self.user.id_user)
+        """Test that id is the primary key"""
+        self.assertIsNotNone(self.user.id)
+        self.assertEqual(self.user.pk, self.user.id)
 
 
 class UserAPITest(APITestCase):
@@ -54,6 +55,7 @@ class UserAPITest(APITestCase):
 
         # Create admin user using custom User model
         self.admin_user = User.objects.create_superuser(
+            username='admin',
             email='admin@example.com',
             password='admin123',
             first_name='Admin',
@@ -65,6 +67,7 @@ class UserAPITest(APITestCase):
         self.client.force_authenticate(user=self.admin_user)
 
         self.user_data = {
+            'username': 'janesmith',
             'role': 'rider',
             'first_name': 'Jane',
             'last_name': 'Smith',
@@ -73,7 +76,7 @@ class UserAPITest(APITestCase):
         }
         self.user = User.objects.create(**self.user_data)
         self.list_url = reverse('user-list')
-        self.detail_url = reverse('user-detail', kwargs={'pk': self.user.id_user})
+        self.detail_url = reverse('user-detail', kwargs={'pk': self.user.id})
 
     def test_get_user_list(self):
         """Test retrieving list of users"""
@@ -84,6 +87,7 @@ class UserAPITest(APITestCase):
     def test_create_user(self):
         """Test creating a new user"""
         new_user_data = {
+            'username': 'bobjohnson',
             'role': 'driver',
             'first_name': 'Bob',
             'last_name': 'Johnson',
@@ -132,7 +136,6 @@ class UserAPITest(APITestCase):
     def test_create_user_duplicate_email(self):
         """Test that creating a user with duplicate email fails"""
         duplicate_data = {
-            'role': 'rider',
             'first_name': 'Duplicate',
             'last_name': 'User',
             'email': 'jane.smith@example.com',  # Same as existing user
@@ -145,6 +148,7 @@ class UserAPITest(APITestCase):
         """Test filtering users by role"""
         # Create additional users
         User.objects.create(
+            username='driver1',
             role='driver',
             first_name='Driver',
             last_name='One',
@@ -152,6 +156,7 @@ class UserAPITest(APITestCase):
             phone_number='+1111111111'
         )
         User.objects.create(
+            username='rider2',
             role='rider',
             first_name='Rider',
             last_name='Two',
@@ -173,6 +178,7 @@ class UserAPITest(APITestCase):
         """Test custom action to get all riders"""
         # Create additional users
         User.objects.create(
+            username='driver1',
             role='driver',
             first_name='Driver',
             last_name='One',
@@ -190,11 +196,12 @@ class UserAPITest(APITestCase):
         """Test custom action to get all drivers"""
         # Create driver
         User.objects.create(
+            username='driver2',
             role='driver',
             first_name='Driver',
             last_name='One',
-            email='driver1@example.com',
-            phone_number='+1111111111'
+            email='driver2@example.com',
+            phone_number='+2222222222'
         )
 
         drivers_url = reverse('user-drivers')
@@ -207,6 +214,7 @@ class UserAPITest(APITestCase):
         """Test ordering users"""
         # Create additional user
         User.objects.create(
+            username='adamapple',
             role='driver',
             first_name='Adam',
             last_name='Apple',

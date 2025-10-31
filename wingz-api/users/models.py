@@ -32,7 +32,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom User model representing riders, drivers, and admins"""
-    id_user = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     role = models.CharField(
@@ -56,6 +56,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = 'user'
+        indexes = [
+            models.Index(fields=['email'], name='user_email_idx'),
+            models.Index(fields=['role'], name='user_role_idx'),
+        ]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.role})"

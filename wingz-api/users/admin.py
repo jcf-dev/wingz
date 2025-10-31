@@ -5,10 +5,10 @@ from .models import User
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ['id_user', 'email', 'first_name', 'last_name', 'role', 'is_staff', 'is_active']
+    list_display = ['id', 'email', 'first_name', 'last_name', 'role', 'is_active']
     list_filter = ['role', 'is_staff', 'is_active']
     search_fields = ['first_name', 'last_name', 'email', 'phone_number']
-    ordering = ['id_user']
+    ordering = ['id']
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),

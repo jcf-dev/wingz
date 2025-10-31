@@ -17,7 +17,13 @@ argon2-cffi = "^25.1.0"
 gunicorn = "^23.0.0"
 psycopg2-binary = "^2.9.11"
 python-decouple = "^3.8"
+faker = ">=37.12.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "faker (>=37.12.0,<38.0.0)"
+]

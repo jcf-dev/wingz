@@ -23,8 +23,8 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['role', 'email', 'username']
     search_fields = ['username', 'first_name', 'last_name', 'email', 'phone_number']
-    ordering_fields = ['id_user', 'username', 'first_name', 'last_name', 'email']
-    ordering = ['id_user']
+    ordering_fields = ['id', 'username', 'first_name', 'last_name', 'email']
+    ordering = ['id']
 
     @action(detail=False, methods=['get'])
     def riders(self, request):
