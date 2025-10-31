@@ -132,12 +132,14 @@ class RideEventViewSet(viewsets.ModelViewSet):
     ViewSet for managing RideEvent CRUD operations.
 
     Provides:
-    - list: Get all ride events
     - create: Create a new ride event
     - retrieve: Get a specific ride event
     - update: Update a ride event
     - partial_update: Partially update a ride event
     - destroy: Delete a ride event
+
+    Note: List action is disabled for performance reasons. Use ride-specific
+    queries through the Ride detail endpoint or filter by ride ID.
     """
     queryset = RideEvent.objects.select_related('ride').all()
     serializer_class = RideEventSerializer
@@ -146,3 +148,19 @@ class RideEventViewSet(viewsets.ModelViewSet):
     search_fields = ['description']
     ordering_fields = ['id', 'created_at']
     ordering = ['-created_at']
+
+    def list(self, request, *args, **kwargs):
+        """
+        Disable listing all ride events for performance reasons.
+        Clients must filter by specific ride ID.
+        """
+        ride_filter = request.query_params.get('ride', None)
+        if not ride_filter:
+            return Response(
+                {
+                    'error': 'Listing all ride events is not supported for performance reasons. '
+                             'Please filter by ride ID using ?ride=<ride_id>'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().list(request, *args, **kwargs)
