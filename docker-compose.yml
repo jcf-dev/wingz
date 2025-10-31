@@ -1,0 +1,48 @@
+services:
+  db:
+    container_name: wingz_db
+    image: postgres:16-alpine
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data/
+    env_file:
+      - .env.docker
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U wingz_user -d wingz" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - api-grid
+  api:
+    container_name: wingz_api
+    restart: always
+    build:
+      context: .
+      dockerfile: wingz-api/Dockerfile
+    working_dir: /api/
+    command: ["python3","manage.py","runserver","0.0.0.0:8000"]
+    env_file:
+      - .env.docker
+    volumes:
+      - ./wingz-api/:/api
+      - ./files/static/:/src/files/static
+      - ./files/media/:/src/files/media
+      - ./files/logs/:/src/files/logs
+      - ./files/templates/:/src/files/templates
+    entrypoint: /api/entrypoint.sh
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - api-grid
+networks:
+  api-grid:
+    driver: bridge
+volumes:
+  db_data:
+  pgadmin_data:
