@@ -4,19 +4,29 @@ A Django REST Framework application for managing rides, users (riders and driver
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Generate Environment Files
+Generate `.env` and `.env.docker` files from the `.env.sample` template:
+```bash
+make env
+```
+
+This will create:
+- `.env` - For local development (uses `localhost` for database connection)
+- `.env.docker` - For Docker environment (uses `wingz_db` service name)
+
+### 2. Install Dependencies
 ```bash
 poetry install
 ```
 
-### 2. Run Migrations (Already Done)
+### 3. Run Migrations (Already Done)
 The database is already set up, but if you need to reset:
 ```bash
 cd src
 python manage.py migrate
 ```
 
-### 3. Create an Admin User (Required for API Access)
+### 4. Create an Admin User (Required for API Access)
 ```bash
 cd src
 python manage.py createsuperuser
@@ -24,15 +34,15 @@ python manage.py createsuperuser
 
 **Note:** Only admin users can access the API endpoints.
 
-### 4. Start the Development Server
+### 5. Start the Development Server
 ```bash
-cd src
+cd wingz-api
 python manage.py runserver
 ```
 
-### 5. Run Tests
+### 6. Run Tests
 ```bash
-cd src
+cd wingz-api
 python manage.py test
 ```
 
@@ -109,8 +119,43 @@ python manage.py test
 - **Django REST Framework Simple JWT** - JWT authentication
 - **dj-rest-auth** - Authentication endpoints
 - **Django Filter 25.2**
+- **Python Decouple 3.8** - Environment variable management
 - **Python 3.14**
 - **Poetry** (dependency management)
+
+## Makefile Commands
+
+The project includes several Makefile targets for common tasks:
+
+### `make env`
+Generates environment files from the `.env.sample` template:
+- Creates `.env` for local development (uses `localhost` for database)
+- Creates `.env.docker` for Docker environment (uses `wingz_db` service name)
+
+```bash
+make env
+```
+
+### `make up`
+Starts the Docker containers in detached mode and waits for services to be ready:
+
+```bash
+make up
+```
+
+### `make clean`
+Stops and removes all Docker containers and volumes:
+
+```bash
+make clean
+```
+
+### `make rebuild`
+Cleans the environment and rebuilds all Docker containers from scratch:
+
+```bash
+make rebuild
+```
 
 ## Authentication
 

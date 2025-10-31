@@ -2,13 +2,14 @@ import os
 
 from pathlib import Path
 from datetime import timedelta
+from decouple import config, Csv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT_DIR = Path(BASE_DIR).resolve().parent
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-DEBUG = int(os.getenv("DEBUG"))
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS").split(",")
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
+DEBUG = config('DEBUG', default=True, cast=bool)
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -60,11 +61,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("POSTGRES_SERVER"),
-        "PORT": os.getenv("POSTGRES_PORT"),
+        "NAME": config("POSTGRES_DB", default="wbsm_db"),
+        "USER": config("POSTGRES_USER", default="admin"),
+        "PASSWORD": config("POSTGRES_PASSWORD", default="admin"),
+        "HOST": config("POSTGRES_SERVER", default="db"),
+        "PORT": config("POSTGRES_PORT", default="5432"),
     }
 }
 AUTH_PASSWORD_VALIDATORS = [

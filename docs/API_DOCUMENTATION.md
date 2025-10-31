@@ -4,27 +4,52 @@ This Django REST Framework API provides endpoints for managing Users, Rides, and
 
 ## Setup
 
-1. Install dependencies:
+1. Setup environment variables:
+```bash
+cp .env.sample .env
+```
+Edit the `.env` file with your configuration. The application uses `python-decouple` for environment variable management.
+
+2. Install dependencies:
 ```bash
 poetry install
 ```
 
-2. Run migrations:
+3. Run migrations:
 ```bash
-cd src
+cd wingz-api
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-3. Create a superuser (optional):
+4. Create a superuser (optional):
 ```bash
+cd wingz-api
 python manage.py createsuperuser
 ```
 
-4. Run the development server:
+5. Run the development server:
 ```bash
+cd wingz-api
 python manage.py runserver
 ```
+
+## Environment Variables
+
+The application uses `python-decouple` to manage environment variables. Configure the following variables in your `.env` file:
+
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `SECRET_KEY` | Django secret key for cryptographic signing | `django-insecure-change-this-in-production` |
+| `DEBUG` | Enable/disable debug mode (1 for True, 0 for False) | `True` |
+| `DJANGO_ALLOWED_HOSTS` | Comma-separated list of allowed hosts | `localhost,127.0.0.1` |
+| `POSTGRES_DB` | PostgreSQL database name | `wbsm_db` |
+| `POSTGRES_USER` | PostgreSQL username | `admin` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | `admin` |
+| `POSTGRES_SERVER` | PostgreSQL server host | `db` |
+| `POSTGRES_PORT` | PostgreSQL server port | `5432` |
+
+**Note:** For production, always use strong, unique values for `SECRET_KEY` and database credentials.
 
 ## Authentication
 
