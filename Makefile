@@ -27,6 +27,27 @@ env:
 	@echo ".env.docker file created successfully!"
 	@echo "Environment files generated successfully!"
 
+# Django management commands
+migrate:
+	@echo "Running database migrations..."
+	cd wingz-api && poetry run python manage.py migrate
+
+makemigrations:
+	@echo "Creating new migrations..."
+	cd wingz-api && poetry run python manage.py makemigrations
+
+createsuperuser:
+	@echo "Creating superuser..."
+	cd wingz-api && poetry run python manage.py createsuperuser
+
+runserver:
+	@echo "Starting development server..."
+	cd wingz-api && poetry run python manage.py runserver
+
+test:
+	@echo "Running tests..."
+	cd wingz-api && poetry run python manage.py test
+
 # Code quality targets
 lint:
 	@echo "Running flake8 code quality checks..."
@@ -43,4 +64,4 @@ format-check:
 quality: format lint
 	@echo "Code quality checks completed!"
 
-.PHONY: up clean rebuild env lint format format-check quality
+.PHONY: up clean rebuild env migrate makemigrations createsuperuser runserver test lint format format-check quality
