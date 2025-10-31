@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "wingz"
+name = "wingz-api"
 version = "0.1.0"
-description = ""
+description = "Wingz Ride Management API"
 authors = ["Joween Flores <hello@joween.dev>"]
 readme = "README.md"
 
@@ -13,7 +13,9 @@ django-filter = "^25.2"
 requests = "^2.32.5"
 dj-rest-auth = "^7.0.1"
 djangorestframework-simplejwt = "^5.5.1"
-
+argon2-cffi = "^25.1.0"
+gunicorn = "^23.0.0"
+psycopg2-binary = "^2.9.11"
 
 [build-system]
 requires = ["poetry-core"]
