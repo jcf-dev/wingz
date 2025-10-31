@@ -5,18 +5,20 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 class UserManager(BaseUserManager):
     """Custom manager for User model"""
 
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, username, email, password=None, **extra_fields):
         """Create and save a regular user"""
+        if not username:
+            raise ValueError('The Username field must be set')
         if not email:
             raise ValueError('The Email field must be set')
         email = self.normalize_email(email)
         extra_fields.setdefault('role', 'rider')
-        user = self.model(email=email, **extra_fields)
+        user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, username, email, password=None, **extra_fields):
         """Create and save a superuser with admin role"""
         extra_fields.setdefault('role', 'admin')
         extra_fields.setdefault('is_staff', True)
@@ -25,12 +27,13 @@ class UserManager(BaseUserManager):
         if extra_fields.get('role') != 'admin':
             raise ValueError('Superuser must have role="admin"')
 
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(username, email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom User model representing riders, drivers, and admins"""
     id_user = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     role = models.CharField(
         max_length=50,
@@ -48,8 +51,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
     class Meta:
         db_table = 'user'

@@ -118,7 +118,7 @@ The API uses **JWT (JSON Web Token)** authentication with a **custom User model*
 
 ### Custom User Model
 
-- **Email-based authentication** (no username)
+- **Username-based authentication** (with required email)
 - **Role field** determines access ('admin', 'rider', 'driver')
 - Only users with `role='admin'` can access API
 
@@ -134,9 +134,8 @@ The API uses **JWT (JSON Web Token)** authentication with a **custom User model*
    ```bash
    curl -X POST http://localhost:8000/api/auth/login/ \
      -H "Content-Type: application/json" \
-     -d '{"email": "admin@example.com", "password": "your_password"}'
+     -d '{"username": "admin", "password": "your_password"}'
    ```
-   Note: Use `email` instead of `username`.
 
 3. **Use token in requests:**
    ```bash
@@ -153,12 +152,11 @@ See [API Documentation](docs/API_DOCUMENTATION.md) for detailed authentication i
 curl -X POST http://localhost:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@example.com",
+    "username": "admin",
     "password": "your_password"
   }'
 ```
 
-Note: Use `email` instead of `username`.
 
 Response:
 ```json
@@ -176,10 +174,11 @@ curl -X POST http://localhost:8000/api/users/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -d '{
+    "username": "johndoe",
+    "email": "john@example.com",
     "role": "rider",
     "first_name": "John",
     "last_name": "Doe",
-    "email": "john@example.com",
     "phone_number": "+1234567890"
   }'
 ```

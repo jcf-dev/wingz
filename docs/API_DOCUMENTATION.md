@@ -33,7 +33,8 @@ The API uses JWT (JSON Web Token) authentication with a custom User model. Only 
 ### Custom User Model
 
 The application uses a custom User model with the following fields:
-- `email` - Used as username (unique)
+- `username` - Used for authentication (unique)
+- `email` - User email address (unique, required)
 - `role` - User role: 'admin', 'rider', or 'driver'
 - `first_name`, `last_name`, `phone_number` - User information
 - `password` - Hashed password
@@ -56,12 +57,11 @@ The application uses a custom User model with the following fields:
 curl -X POST http://localhost:8000/api/auth/login/ \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "admin@example.com",
+    "username": "admin",
     "password": "your_password"
   }'
 ```
 
-**Note:** Use `email` field instead of `username` for authentication.
 
 **Response:**
 ```json
@@ -106,7 +106,8 @@ python manage.py createsuperuser
 ```
 
 This will prompt for:
-- Email (used as username)
+- Username (used for authentication)
+- Email (required)
 - First name
 - Last name
 - Password
@@ -134,10 +135,11 @@ Base URL: `http://localhost:8000/api/`
 
 **User Fields:**
 - `id_user` (read-only)
+- `username` (string, unique)
+- `email` (email, unique, required)
 - `role` (string)
 - `first_name` (string)
 - `last_name` (string)
-- `email` (email, unique)
 - `phone_number` (string)
 
 **Example POST Request:**
@@ -146,10 +148,11 @@ curl -X POST http://localhost:8000/api/users/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -d '{
+    "username": "johndoe",
+    "email": "john.doe@example.com",
     "role": "rider",
     "first_name": "John",
     "last_name": "Doe",
-    "email": "john.doe@example.com",
     "phone_number": "+1234567890"
   }'
 ```
@@ -158,10 +161,11 @@ curl -X POST http://localhost:8000/api/users/ \
 ```json
 {
   "id_user": 1,
+  "username": "johndoe",
+  "email": "john.doe@example.com",
   "role": "rider",
   "first_name": "John",
   "last_name": "Doe",
-  "email": "john.doe@example.com",
   "phone_number": "+1234567890"
 }
 ```
@@ -239,11 +243,11 @@ curl -X POST http://localhost:8000/api/users/ \
 All list endpoints support filtering, searching, and ordering:
 
 ### Users
-- **Filter by:** `role`, `email`
-- **Search in:** `first_name`, `last_name`, `email`, `phone_number`
-- **Order by:** `id_user`, `first_name`, `last_name`, `email`
+- **Filter by:** `role`, `email`, `username`
+- **Search in:** `username`, `first_name`, `last_name`, `email`, `phone_number`
+- **Order by:** `id_user`, `username`, `first_name`, `last_name`, `email`
 
-Example: `/api/users/?role=rider&search=john&ordering=first_name`
+Example: `/api/users/?role=rider&search=john&ordering=username`
 
 ### Rides
 - **Filter by:** `status`, `id_rider`, `id_driver`
