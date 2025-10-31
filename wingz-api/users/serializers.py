@@ -8,26 +8,34 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id',
-            'username',
-            'email',
-            'role',
-            'first_name',
-            'last_name',
-            'phone_number'
+            "id",
+            "username",
+            "email",
+            "role",
+            "first_name",
+            "last_name",
+            "phone_number",
         ]
-        read_only_fields = ['id']
+        read_only_fields = ["id"]
 
     def validate_username(self, value):
         """Validate username uniqueness"""
         if self.instance:
             # Update case - exclude current instance
-            if User.objects.exclude(id=self.instance.id).filter(username=value).exists():
-                raise serializers.ValidationError("A user with this username already exists.")
+            if (
+                User.objects.exclude(id=self.instance.id)
+                .filter(username=value)
+                .exists()
+            ):
+                raise serializers.ValidationError(
+                    "A user with this username already exists."
+                )
         else:
             # Create case
             if User.objects.filter(username=value).exists():
-                raise serializers.ValidationError("A user with this username already exists.")
+                raise serializers.ValidationError(
+                    "A user with this username already exists."
+                )
         return value
 
     def validate_email(self, value):
@@ -35,10 +43,13 @@ class UserSerializer(serializers.ModelSerializer):
         if self.instance:
             # Update case - exclude current instance
             if User.objects.exclude(id=self.instance.id).filter(email=value).exists():
-                raise serializers.ValidationError("A user with this email already exists.")
+                raise serializers.ValidationError(
+                    "A user with this email already exists."
+                )
         else:
             # Create case
             if User.objects.filter(email=value).exists():
-                raise serializers.ValidationError("A user with this email already exists.")
+                raise serializers.ValidationError(
+                    "A user with this email already exists."
+                )
         return value
-

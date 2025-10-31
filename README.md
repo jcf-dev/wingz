@@ -16,8 +16,10 @@ This will create:
 
 ### 2. Install Dependencies
 ```bash
-poetry install
+poetry install --with dev
 ```
+
+This installs all dependencies including development tools (flake8, black).
 
 ### 3. Run Migrations (Already Done)
 The database is already set up, but if you need to reset:
@@ -112,6 +114,12 @@ python manage.py test
 - Model and API tests
 - Test coverage for all endpoints
 
+**Code Quality**
+- Black for consistent code formatting (line length: 88)
+- Flake8 for style checking and linting (max complexity: 10)
+- Automated formatting and linting via Makefile commands
+- Excludes migrations and build directories from checks
+
 ## Tech Stack
 
 - **Django 5.2.7**
@@ -123,11 +131,17 @@ python manage.py test
 - **Python 3.14**
 - **Poetry** (dependency management)
 
+### Development Tools
+- **Black 24.x** - Code formatter
+- **Flake8 7.x** - Code linter and style checker
+
 ## Makefile Commands
 
 The project includes several Makefile targets for common tasks:
 
-### `make env`
+### Environment Management
+
+#### `make env`
 Generates environment files from the `.env.sample` template:
 - Creates `.env` for local development (uses `localhost` for database)
 - Creates `.env.docker` for Docker environment (uses `wingz_db` service name)
@@ -136,26 +150,102 @@ Generates environment files from the `.env.sample` template:
 make env
 ```
 
-### `make up`
+### Docker Management
+
+#### `make up`
 Starts the Docker containers in detached mode and waits for services to be ready:
 
 ```bash
 make up
 ```
 
-### `make clean`
+#### `make clean`
 Stops and removes all Docker containers and volumes:
 
 ```bash
 make clean
 ```
 
-### `make rebuild`
+#### `make rebuild`
 Cleans the environment and rebuilds all Docker containers from scratch:
 
 ```bash
 make rebuild
 ```
+
+### Code Quality
+
+#### `make lint`
+Runs flake8 to check code quality and style:
+
+```bash
+make lint
+```
+
+#### `make format`
+Formats all Python code using black:
+
+```bash
+make format
+```
+
+#### `make format-check`
+Checks if code formatting is needed without modifying files:
+
+```bash
+make format-check
+```
+
+#### `make quality`
+Runs both format and lint checks (recommended before commits):
+
+```bash
+make quality
+```
+
+## Code Quality
+
+The project uses industry-standard tools to maintain code quality and consistency:
+
+### Configuration
+
+- **Black**: Configured in `pyproject.toml` with 88-character line length
+- **Flake8**: Configured in `.flake8` with black-compatible settings
+
+### Workflow
+
+Before committing code, run:
+
+```bash
+make quality
+```
+
+This will:
+1. Auto-format all Python files with black
+2. Check code quality with flake8
+
+### Manual Usage
+
+You can also run the tools individually:
+
+```bash
+# Format code
+make format
+
+# Check code style
+make lint
+
+# Check formatting without modifying files
+make format-check
+```
+
+### Best Practices
+
+- Run `make quality` before committing changes
+- All code follows PEP 8 style guidelines
+- Maximum line length: 88 characters
+- Maximum cyclomatic complexity: 10
+- Migrations are excluded from checks
 
 ## Authentication
 
@@ -264,11 +354,13 @@ curl -X POST http://localhost:8000/api/auth/token/refresh/ \
 
 ```
 wingz/
-├── src/
+├── wingz-api/                # Main application directory
 │   ├── manage.py
+│   ├── load_dummy_data.py    # Dummy data generator script
 │   ├── core/                 # Django project settings
 │   │   ├── settings.py
 │   │   ├── urls.py
+│   │   ├── permissions.py    # Custom permissions
 │   │   └── wsgi.py
 │   ├── users/                # Users application
 │   │   ├── models.py         # User model
@@ -276,6 +368,7 @@ wingz/
 │   │   ├── views.py          # User ViewSet
 │   │   ├── urls.py           # User API routing
 │   │   ├── admin.py          # User admin configuration
+│   │   ├── tests.py          # User tests
 │   │   └── migrations/       # User migrations
 │   └── rides/                # Rides application
 │       ├── models.py         # Ride, RideEvent models
@@ -283,8 +376,14 @@ wingz/
 │       ├── views.py          # Ride ViewSets
 │       ├── urls.py           # Ride API routing
 │       ├── admin.py          # Ride admin configuration
+│       ├── tests.py          # Ride tests
 │       └── migrations/       # Ride migrations
 ├── docs/
 │   └── API_DOCUMENTATION.md  # Complete API reference
+├── pyproject.toml            # Poetry dependencies & black config
+├── .flake8                   # Flake8 configuration
+├── Makefile                  # Project automation commands
+├── docker-compose.yml        # Docker configuration
+├── Dockerfile                # Docker image definition
 └── README.md                 # This file
 ```

@@ -14,6 +14,4 @@ class IsAdminUserRole(permissions.BasePermission):
 
         # Check if user has admin role
         # Since we're using AUTH_USER_MODEL, request.user is our custom User model
-        return hasattr(request.user, 'role') and request.user.role == 'admin'
-
-
+        return hasattr(request.user, "role") and request.user.role == "admin"

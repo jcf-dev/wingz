@@ -4,10 +4,9 @@ from .views import UserViewSet
 
 # Create a router and register our viewsets
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename='user')
+router.register(r"users", UserViewSet, basename="user")
 
 # The API URLs are determined automatically by the router
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
-

@@ -26,3 +26,21 @@ env:
 	@sed -i.bak 's/POSTGRES_SERVER=localhost/POSTGRES_SERVER=wingz_db/' .env.docker && rm .env.docker.bak
 	@echo ".env.docker file created successfully!"
 	@echo "Environment files generated successfully!"
+
+# Code quality targets
+lint:
+	@echo "Running flake8 code quality checks..."
+	cd wingz-api && poetry run flake8 .
+
+format:
+	@echo "Formatting code with black..."
+	cd wingz-api && poetry run black .
+
+format-check:
+	@echo "Checking code formatting with black..."
+	cd wingz-api && poetry run black --check .
+
+quality: format lint
+	@echo "Code quality checks completed!"
+
+.PHONY: up clean rebuild env lint format format-check quality

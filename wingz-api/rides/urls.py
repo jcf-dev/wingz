@@ -4,11 +4,10 @@ from .views import RideViewSet, RideEventViewSet
 
 # Create a router and register our viewsets
 router = DefaultRouter()
-router.register(r'rides', RideViewSet, basename='ride')
-router.register(r'ride-events', RideEventViewSet, basename='rideevent')
+router.register(r"rides", RideViewSet, basename="ride")
+router.register(r"ride-events", RideEventViewSet, basename="rideevent")
 
 # The API URLs are determined automatically by the router
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
-
