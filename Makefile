@@ -4,6 +4,12 @@ up:
 	@sleep 10
 	@echo "Services are ready!"
 
+db-up:
+	docker-compose up -d db
+	@echo "Waiting for database service to be ready..."
+	@sleep 10
+	@echo "Database service is ready!"
+
 clean:
 	docker-compose down -v
 
@@ -48,6 +54,13 @@ test:
 	@echo "Running tests..."
 	cd wingz-api && poetry run python manage.py test
 
+load-dummy-data:
+	@echo "Loading dummy data..."
+	cd wingz-api && poetry run python load_dummy_data.py
+
+fake: up migrate load-dummy-data
+	@echo "Setup completed! Services are up, migrations are applied, and dummy data is loaded."
+
 # Code quality targets
 lint:
 	@echo "Running flake8 code quality checks..."
@@ -64,4 +77,4 @@ format-check:
 quality: format lint
 	@echo "Code quality checks completed!"
 
-.PHONY: up clean rebuild env migrate migrations superuser runserver test lint format format-check quality
+.PHONY: up db-up clean rebuild env migrate migrations superuser runserver test load-dummy-data fake lint format format-check quality

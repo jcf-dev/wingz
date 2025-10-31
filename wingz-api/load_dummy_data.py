@@ -3,7 +3,8 @@ Load dummy data into the Wingz database.
 
 This script creates:
 - 1 admin user
-- 50 users (25 riders, 25 drivers)
+- 300 riders
+- 10 drivers
 - 1000 rides with realistic data
 - Multiple ride events per ride
 """
@@ -89,13 +90,13 @@ def create_admin_user():
     if created:
         admin.set_password("admin123")
         admin.save()
-        print(f"✓ Created admin user: {admin.username}")
+        print(f"Created admin user: {admin.username}")
     else:
-        print(f"✓ Admin user already exists: {admin.username}")
+        print(f"Admin user already exists: {admin.username}")
     return admin
 
 
-def create_users(num_riders=25, num_drivers=25):
+def create_users(num_riders=300, num_drivers=10):
     """Create riders and drivers"""
     print(f"\nCreating {num_riders} riders and {num_drivers} drivers...")
 
@@ -126,7 +127,7 @@ def create_users(num_riders=25, num_drivers=25):
         if (i + 1) % 10 == 0:
             print(f"  Created {i + 1}/{num_riders} riders...")
 
-    print(f"✓ Created {num_riders} riders")
+    print(f"Created {num_riders} riders")
 
     # Create drivers
     for i in range(num_drivers):
@@ -152,7 +153,7 @@ def create_users(num_riders=25, num_drivers=25):
         if (i + 1) % 10 == 0:
             print(f"  Created {i + 1}/{num_drivers} drivers...")
 
-    print(f"✓ Created {num_drivers} drivers")
+    print(f"Created {num_drivers} drivers")
 
     return riders, drivers
 
@@ -213,15 +214,27 @@ def create_rides_and_events(riders, drivers, num_rides=1000):
         # Create events for this ride
         event_descriptions = RIDE_EVENTS_BY_STATUS.get(status, ["Ride event"])
 
+        # Generate ride duration between 30 minutes and 5 hours
+        ride_duration_minutes = randint(30, 300)  # 30 mins to 5 hours
+
         # Create 1-4 events per ride
         num_events = randint(1, min(4, len(event_descriptions)))
         event_time = pickup_time
 
+        # Distribute events across the ride duration
+        if num_events > 1:
+            time_between_events = ride_duration_minutes / (num_events - 1)
+        else:
+            time_between_events = ride_duration_minutes
+
         for j in range(num_events):
             description = event_descriptions[min(j, len(event_descriptions) - 1)]
 
-            # Events happen shortly after each other
-            event_time = event_time + timedelta(minutes=randint(1, 10))
+            # For first event, use pickup time; for others, distribute across duration
+            if j > 0:
+                event_time = pickup_time + timedelta(
+                    minutes=int(time_between_events * j)
+                )
 
             event = RideEvent.objects.create(ride=ride, description=description)
             # Manually set created_at to match the ride timeline
@@ -232,8 +245,8 @@ def create_rides_and_events(riders, drivers, num_rides=1000):
         if (i + 1) % 100 == 0:
             print(f"  Created {i + 1}/{num_rides} rides with events...")
 
-    print(f"✓ Created {rides_created} rides")
-    print(f"✓ Created {events_created} ride events")
+    print(f"Created {rides_created} rides")
+    print(f"Created {events_created} ride events")
 
     return rides_created, events_created
 
@@ -273,14 +286,14 @@ def main():
         )
         print(f"Total Ride Events: {RideEvent.objects.count()}")
         print("=" * 60)
-        print("✓ Dummy data loaded successfully!")
+        print("Dummy data loaded successfully!")
         print("\nAdmin credentials:")
         print("  Username: admin")
         print("  Password: admin123")
         print("=" * 60)
 
     except Exception as e:
-        print(f"\n✗ Error loading dummy data: {e}")
+        print(f"\nError loading dummy data: {e}")
         import traceback
 
         traceback.print_exc()
