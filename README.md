@@ -24,28 +24,24 @@ This installs all dependencies including development tools (flake8, black).
 ### 3. Run Migrations (Already Done)
 The database is already set up, but if you need to reset:
 ```bash
-cd src
-python manage.py migrate
+make migrate
 ```
 
 ### 4. Create an Admin User (Required for API Access)
 ```bash
-cd src
-python manage.py createsuperuser
+make createsuperuser
 ```
 
 **Note:** Only admin users can access the API endpoints.
 
 ### 5. Start the Development Server
 ```bash
-cd wingz-api
-python manage.py runserver
+make runserver
 ```
 
 ### 6. Run Tests
 ```bash
-cd wingz-api
-python manage.py test
+make test
 ```
 
 ## Documentation
@@ -148,6 +144,43 @@ Generates environment files from the `.env.sample` template:
 
 ```bash
 make env
+```
+
+### Django Management
+
+#### `make migrate`
+Runs database migrations:
+
+```bash
+make migrate
+```
+
+#### `make makemigrations`
+Creates new migration files based on model changes:
+
+```bash
+make makemigrations
+```
+
+#### `make createsuperuser`
+Creates an admin superuser for API access:
+
+```bash
+make createsuperuser
+```
+
+#### `make runserver`
+Starts the Django development server:
+
+```bash
+make runserver
+```
+
+#### `make test`
+Runs all test suites:
+
+```bash
+make test
 ```
 
 ### Docker Management
@@ -261,7 +294,7 @@ The API uses **JWT (JSON Web Token)** authentication with a **custom User model*
 
 1. **Create an admin user:**
    ```bash
-   python manage.py createsuperuser
+   make createsuperuser
    ```
    This creates a user with `role='admin'` automatically.
 
