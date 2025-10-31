@@ -233,7 +233,7 @@ To sort rides by distance to a GPS position, provide `latitude`, `longitude`, an
 GET /api/rides/?latitude=37.7749&longitude=-122.4194&ordering=distance
 ```
 
-This uses the **Haversine formula** in the database for efficient distance calculation, with support for:
+This uses the **[Haversine formula](https://en.wikipedia.org/wiki/Haversine_formula)** in the database for efficient distance calculation, with support for:
 - Ascending order: `?ordering=distance`
 - Descending order: `?ordering=-distance`
 - Works with pagination
