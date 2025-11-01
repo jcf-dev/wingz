@@ -216,7 +216,9 @@ def create_rides_and_events(riders, drivers, num_rides=1000):
             final_status = "completed"
         else:
             # Cancelled flow: can be cancelled after requested, accepted, or en-route
-            cancellation_point = choice(["after_requested", "after_accepted", "after_en_route"])
+            cancellation_point = choice(
+                ["after_requested", "after_accepted", "after_en_route"]
+            )
 
             if cancellation_point == "after_requested":
                 # Cancel immediately after requested
@@ -270,9 +272,7 @@ def create_rides_and_events(riders, drivers, num_rides=1000):
 
             # Increment time for next event
             if j < num_events - 1:
-                event_time = event_time + timedelta(
-                    minutes=int(time_between_events)
-                )
+                event_time = event_time + timedelta(minutes=int(time_between_events))
 
         if (i + 1) % 100 == 0:
             print(f"  Created {i + 1}/{num_rides} rides with events...")
