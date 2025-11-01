@@ -9,11 +9,14 @@ This script creates:
 - Multiple ride events per ride
 """
 
-import os
-import sys
-import django
-from datetime import timedelta
-from random import randint, choice, uniform
+RIDERS = 300
+DRIVERS = 10
+
+import os  # noqa: E402
+import sys  # noqa: E402
+import django  # noqa: E402
+from datetime import timedelta  # noqa: E402
+from random import randint, choice, uniform  # noqa: E402
 
 # Setup Django environment
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -40,15 +43,19 @@ RIDE_STATUSES = [
 
 RIDE_EVENTS_BY_STATUS = {
     "requested": ["Ride requested by passenger"],
-    "accepted": ["Driver accepted ride", "Driver is on the way"],
-    "en-route": ["Driver is 5 minutes away", "Driver is 2 minutes away"],
-    "pickup": ["Driver arrived at pickup location", "Passenger is boarding"],
+    "accepted": [
+        "Driver accepted ride",
+    ],
+    "en-route": [
+        "Driver is en route to pickup location",
+    ],
+    "pickup": [
+        "Driver arrived at pickup location",
+    ],
     "in-progress": [
         "Trip started",
-        "Halfway to destination",
-        "Approaching destination",
     ],
-    "completed": ["Passenger dropped off", "Ride completed", "Payment processed"],
+    "completed": ["Ride completed"],
     "cancelled": [
         "Ride cancelled by passenger",
         "Ride cancelled by driver",
@@ -96,7 +103,7 @@ def create_admin_user():
     return admin
 
 
-def create_users(num_riders=300, num_drivers=10):
+def create_users(num_riders, num_drivers):
     """Create riders and drivers"""
     print(f"\nCreating {num_riders} riders and {num_drivers} drivers...")
 
@@ -294,7 +301,7 @@ def main():
         create_admin_user()
 
         # Create riders and drivers
-        riders, drivers = create_users(num_riders=25, num_drivers=25)
+        riders, drivers = create_users(RIDERS, DRIVERS)
 
         # Create rides and events
         rides_count, events_count = create_rides_and_events(
