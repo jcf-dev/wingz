@@ -35,6 +35,25 @@ class RideViewSet(viewsets.ModelViewSet):
             return RideListSerializer
         return RideDetailSerializer
 
+    def filter_queryset(self, queryset):
+        """
+        Custom filtering to handle distance sorting.
+        Only applies distance sorting when valid coordinates are provided.
+        """
+        ordering_param = self.request.query_params.get("ordering", None)
+
+        if ordering_param in [
+            "distance",
+            "-distance",
+            "distance_to_pickup",
+            "-distance_to_pickup",
+        ]:
+            for backend in [DjangoFilterBackend]:
+                queryset = backend().filter_queryset(self.request, queryset, self)
+            return queryset
+
+        return super().filter_queryset(queryset)
+
     def get_queryset(self):
         """
         Optimize queryset with select_related and prefetch_related.
@@ -43,12 +62,9 @@ class RideViewSet(viewsets.ModelViewSet):
         """
         queryset = Ride.objects.select_related("rider", "driver")
 
-        # Only for list action, add today's events prefetch
         if self.action == "list":
-            # Calculate 24 hours ago
             twenty_four_hours_ago = timezone.now() - timedelta(hours=24)
 
-            # Prefetch only today's ride events
             todays_events = Prefetch(
                 "events",
                 queryset=RideEvent.objects.filter(
@@ -58,12 +74,10 @@ class RideViewSet(viewsets.ModelViewSet):
             )
             queryset = queryset.prefetch_related(todays_events)
 
-            # Filter by rider email if provided
             rider_email = self.request.query_params.get("rider_email", None)
             if rider_email:
                 queryset = queryset.filter(rider__email=rider_email)
 
-            # Handle distance-based sorting
             lat = self.request.query_params.get("latitude", None)
             lon = self.request.query_params.get("longitude", None)
 
@@ -72,9 +86,6 @@ class RideViewSet(viewsets.ModelViewSet):
                     lat = float(lat)
                     lon = float(lon)
 
-                    # Use Haversine formula for distance calculation in database
-                    # Distance in kilometers
-                    # Formula: 6371 * acos(cos(radians(lat1)) * cos(radians(lat2)) * cos(radians(lon2) - radians(lon1)) + sin(radians(lat1)) * sin(radians(lat2)))
                     queryset = queryset.annotate(
                         distance_to_pickup=ExpressionWrapper(
                             6371
@@ -88,7 +99,6 @@ class RideViewSet(viewsets.ModelViewSet):
                         )
                     )
 
-                    # Check if sorting by distance is requested
                     ordering = self.request.query_params.get("ordering", None)
                     if ordering == "distance" or ordering == "distance_to_pickup":
                         queryset = queryset.order_by("distance_to_pickup")
@@ -96,10 +106,9 @@ class RideViewSet(viewsets.ModelViewSet):
                         queryset = queryset.order_by("-distance_to_pickup")
 
                 except (ValueError, TypeError):
-                    pass  # Invalid lat/lon, ignore distance calculation
+                    pass
 
         elif self.action == "retrieve":
-            # For detail view, prefetch all events
             queryset = queryset.prefetch_related("events")
 
         return queryset
@@ -171,16 +180,14 @@ class RideEventViewSet(viewsets.ModelViewSet):
         """
         ride_id = kwargs.get("pk")
 
-        # Verify that the ride exists
         try:
-            ride = Ride.objects.get(pk=ride_id)
+            Ride.objects.get(pk=ride_id)
         except Ride.DoesNotExist:
             return Response(
                 {"error": f"Ride with id {ride_id} does not exist."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Get all events for this ride
         events = RideEvent.objects.filter(ride_id=ride_id).order_by("-created_at")
         serializer = self.get_serializer(events, many=True)
 
