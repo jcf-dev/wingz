@@ -155,18 +155,18 @@ Runs database migrations:
 make migrate
 ```
 
-#### `make makemigrations`
+#### `make migrations`
 Creates new migration files based on model changes:
 
 ```bash
-make makemigrations
+make migrations
 ```
 
-#### `make createsuperuser`
+#### `make superuser`
 Creates an admin superuser for API access:
 
 ```bash
-make createsuperuser
+make superuser
 ```
 
 #### `make runserver`

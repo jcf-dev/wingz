@@ -3,7 +3,8 @@ Load dummy data into the Wingz database.
 
 This script creates:
 - 1 admin user
-- 50 users (25 riders, 25 drivers)
+- 300 riders
+- 10 drivers
 - 1000 rides with realistic data
 - Multiple ride events per ride
 """
@@ -89,13 +90,13 @@ def create_admin_user():
     if created:
         admin.set_password("admin123")
         admin.save()
-        print(f"✓ Created admin user: {admin.username}")
+        print(f"Created admin user: {admin.username}")
     else:
-        print(f"✓ Admin user already exists: {admin.username}")
+        print(f"Admin user already exists: {admin.username}")
     return admin
 
 
-def create_users(num_riders=25, num_drivers=25):
+def create_users(num_riders=300, num_drivers=10):
     """Create riders and drivers"""
     print(f"\nCreating {num_riders} riders and {num_drivers} drivers...")
 
@@ -126,7 +127,7 @@ def create_users(num_riders=25, num_drivers=25):
         if (i + 1) % 10 == 0:
             print(f"  Created {i + 1}/{num_riders} riders...")
 
-    print(f"✓ Created {num_riders} riders")
+    print(f"Created {num_riders} riders")
 
     # Create drivers
     for i in range(num_drivers):
@@ -152,7 +153,7 @@ def create_users(num_riders=25, num_drivers=25):
         if (i + 1) % 10 == 0:
             print(f"  Created {i + 1}/{num_drivers} drivers...")
 
-    print(f"✓ Created {num_drivers} drivers")
+    print(f"Created {num_drivers} drivers")
 
     return riders, drivers
 
@@ -180,26 +181,67 @@ def create_rides_and_events(riders, drivers, num_rides=1000):
         rider = choice(riders)
         driver = choice(drivers)
 
-        # Random status (most rides should be completed)
-        status = choice(
-            [
-                "requested",
-                "accepted",
-                "en-route",
-                "pickup",
-                "in-progress",
-                "completed",
-                "cancelled",
-            ]
-        )
-
         # Generate pickup and dropoff coordinates
         pickup_lat, pickup_lon = generate_coordinates()
         dropoff_lat, dropoff_lon = generate_coordinates()
 
-        # Create ride
+        # Determine final outcome: 80% completed, 20% cancelled
+        will_complete = randint(1, 100) <= 80
+
+        # Build sequential event flow
+        event_sequence = []
+        status_sequence = []
+
+        # All rides start with requested
+        event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["requested"]))
+        status_sequence.append("requested")
+
+        if will_complete:
+            # Complete flow: requested → accepted → en-route → pickup → in-progress → completed
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["accepted"]))
+            status_sequence.append("accepted")
+
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["en-route"]))
+            status_sequence.append("en-route")
+
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["pickup"]))
+            status_sequence.append("pickup")
+
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["in-progress"]))
+            status_sequence.append("in-progress")
+
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["completed"]))
+            status_sequence.append("completed")
+
+            final_status = "completed"
+        else:
+            # Cancelled flow: can be cancelled after requested, accepted, or en-route
+            cancellation_point = choice(
+                ["after_requested", "after_accepted", "after_en_route"]
+            )
+
+            if cancellation_point == "after_requested":
+                # Cancel immediately after requested
+                pass
+            elif cancellation_point == "after_accepted":
+                # Cancel after accepted
+                event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["accepted"]))
+                status_sequence.append("accepted")
+            else:  # after_en_route
+                # Cancel after en-route
+                event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["accepted"]))
+                status_sequence.append("accepted")
+                event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["en-route"]))
+                status_sequence.append("en-route")
+
+            # Add cancellation event
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["cancelled"]))
+            status_sequence.append("cancelled")
+            final_status = "cancelled"
+
+        # Create ride with final status
         ride = Ride.objects.create(
-            status=status,
+            status=final_status,
             rider=rider,
             driver=driver,
             pickup_latitude=pickup_lat,
@@ -210,30 +252,33 @@ def create_rides_and_events(riders, drivers, num_rides=1000):
         )
         rides_created += 1
 
-        # Create events for this ride
-        event_descriptions = RIDE_EVENTS_BY_STATUS.get(status, ["Ride event"])
+        # Create events with proper timing
+        # Calculate time intervals between events
+        total_duration_minutes = randint(30, 300)  # 30 mins to 5 hours
+        num_events = len(event_sequence)
 
-        # Create 1-4 events per ride
-        num_events = randint(1, min(4, len(event_descriptions)))
+        if num_events > 1:
+            time_between_events = total_duration_minutes / (num_events - 1)
+        else:
+            time_between_events = 0
+
         event_time = pickup_time
-
-        for j in range(num_events):
-            description = event_descriptions[min(j, len(event_descriptions) - 1)]
-
-            # Events happen shortly after each other
-            event_time = event_time + timedelta(minutes=randint(1, 10))
-
+        for j, description in enumerate(event_sequence):
             event = RideEvent.objects.create(ride=ride, description=description)
             # Manually set created_at to match the ride timeline
             event.created_at = event_time
             event.save()
             events_created += 1
 
+            # Increment time for next event
+            if j < num_events - 1:
+                event_time = event_time + timedelta(minutes=int(time_between_events))
+
         if (i + 1) % 100 == 0:
             print(f"  Created {i + 1}/{num_rides} rides with events...")
 
-    print(f"✓ Created {rides_created} rides")
-    print(f"✓ Created {events_created} ride events")
+    print(f"Created {rides_created} rides")
+    print(f"Created {events_created} ride events")
 
     return rides_created, events_created
 
@@ -273,14 +318,14 @@ def main():
         )
         print(f"Total Ride Events: {RideEvent.objects.count()}")
         print("=" * 60)
-        print("✓ Dummy data loaded successfully!")
+        print("Dummy data loaded successfully!")
         print("\nAdmin credentials:")
         print("  Username: admin")
         print("  Password: admin123")
         print("=" * 60)
 
     except Exception as e:
-        print(f"\n✗ Error loading dummy data: {e}")
+        print(f"\nError loading dummy data: {e}")
         import traceback
 
         traceback.print_exc()

@@ -18,7 +18,7 @@ poetry install
 3. Run migrations:
 ```bash
 cd wingz-api
-python manage.py makemigrations
+python manage.py migrations
 python manage.py migrate
 ```
 
@@ -159,13 +159,22 @@ Base URL: `http://localhost:8000/api/`
 | GET | `/api/users/drivers/` | Get all drivers |
 
 **User Fields:**
-- `id_user` (read-only)
-- `username` (string, unique)
-- `email` (email, unique, required)
-- `role` (string)
-- `first_name` (string)
-- `last_name` (string)
-- `phone_number` (string)
+- `id` (integer, read-only) - Auto-generated user ID
+- `username` (string, required, unique, max 150 chars) - Used for authentication
+- `email` (email, required, unique, max 255 chars, case-insensitive) - User email address
+- `password` (string, write-only, required for creation) - User password (validated with Django password validators)
+- `password_confirm` (string, write-only, required when password is provided) - Password confirmation, must match password
+- `role` (string, required) - User role: 'admin', 'rider', or 'driver' (default: 'rider')
+- `first_name` (string, required, cannot be blank) - User's first name
+- `last_name` (string, required, cannot be blank) - User's last name
+- `phone_number` (string, required, cannot be blank) - Phone number in format '+999999999' (9-15 digits)
+
+**Validation Rules:**
+- `username` must be unique (case-sensitive)
+- `email` must be unique (case-insensitive)
+- `phone_number` must match format: '+999999999' (optional + sign, up to 15 digits)
+- `password` and `password_confirm` must match when creating or updating password
+- `password` is validated with Django's password validators (complexity requirements)
 
 **Example POST Request:**
 ```bash
@@ -175,6 +184,8 @@ curl -X POST http://localhost:8000/api/users/ \
   -d '{
     "username": "johndoe",
     "email": "john.doe@example.com",
+    "password": "SecurePassword123!",
+    "password_confirm": "SecurePassword123!",
     "role": "rider",
     "first_name": "John",
     "last_name": "Doe",
@@ -185,7 +196,7 @@ curl -X POST http://localhost:8000/api/users/ \
 **Example Response:**
 ```json
 {
-  "id_user": 1,
+  "id": 1,
   "username": "johndoe",
   "email": "john.doe@example.com",
   "role": "rider",
@@ -240,23 +251,39 @@ This uses the **[Haversine formula](https://en.wikipedia.org/wiki/Haversine_form
 - Uses database indexes on pickup coordinates for optimal performance
 
 **Ride List Fields:**
-- `id_ride` (read-only)
-- `status` (string: 'en-route', 'pickup', 'dropoff')
-- `id_rider` (integer, foreign key to User)
-- `id_driver` (integer, foreign key to User)
-- `pickup_latitude` (float, -90 to 90)
-- `pickup_longitude` (float, -180 to 180)
-- `dropoff_latitude` (float, -90 to 90)
-- `dropoff_longitude` (float, -180 to 180)
-- `pickup_time` (datetime)
-- `rider_details` (object, nested User data)
-- `driver_details` (object, nested User data)
-- `todays_ride_events` (array, only events from last 24 hours)
-- `distance_to_pickup` (float, in km, only present when GPS coords provided)
+- `id` (integer, read-only) - Auto-generated ride ID
+- `status` (string, required) - Ride status with choices:
+  - `'requested'` - Ride requested (default)
+  - `'accepted'` - Driver accepted the ride
+  - `'en-route'` - Driver en route to pickup
+  - `'pickup'` - Driver at pickup location
+  - `'in-progress'` - Ride in progress
+  - `'dropoff'` - At dropoff location
+  - `'completed'` - Ride completed
+  - `'cancelled'` - Ride cancelled
+- `rider` (integer, required) - Foreign key to User with role='rider'
+- `driver` (integer, required) - Foreign key to User with role='driver'
+- `pickup_latitude` (float, required) - Valid range: -90 to 90
+- `pickup_longitude` (float, required) - Valid range: -180 to 180
+- `dropoff_latitude` (float, required) - Valid range: -90 to 90
+- `dropoff_longitude` (float, required) - Valid range: -180 to 180
+- `pickup_time` (datetime, required) - Cannot be in the past (5-minute buffer)
+- `rider_details` (object, read-only) - Nested User data for the rider
+- `driver_details` (object, read-only) - Nested User data for the driver
+- `todays_ride_events` (array, read-only) - Only events from last 24 hours
+- `distance_to_pickup` (float, read-only) - Distance in km, only present when GPS coords provided in query params
 
 **Ride Detail Fields (GET /api/rides/{id}/):**
-- All fields from list, plus:
-- `events` (array, all ride events)
+- All fields from list, except `todays_ride_events` and `distance_to_pickup`, plus:
+- `events` (array, read-only) - All ride events for this ride
+
+**Validation Rules:**
+- Coordinates must be valid numbers (not NaN or Infinity)
+- Pickup and dropoff locations cannot be the same
+- `rider` user must have role='rider'
+- `driver` user must have role='driver'
+- `rider` and `driver` must be different users
+- `pickup_time` cannot be more than 5 minutes in the past
 
 **Example Requests:**
 
@@ -298,17 +325,17 @@ GET /api/rides/?status=en-route&rider_email=john@example.com&ordering=pickup_tim
   "previous": null,
   "results": [
     {
-      "id_ride": 1,
+      "id": 1,
       "status": "en-route",
-      "id_rider": 1,
-      "id_driver": 2,
+      "rider": 1,
+      "driver": 2,
       "pickup_latitude": 37.7749,
       "pickup_longitude": -122.4194,
       "dropoff_latitude": 37.7849,
       "dropoff_longitude": -122.4094,
       "pickup_time": "2025-10-30T10:00:00Z",
       "rider_details": {
-        "id_user": 1,
+        "id": 1,
         "username": "johndoe",
         "email": "john@example.com",
         "role": "rider",
@@ -317,7 +344,7 @@ GET /api/rides/?status=en-route&rider_email=john@example.com&ordering=pickup_tim
         "phone_number": "+1234567890"
       },
       "driver_details": {
-        "id_user": 2,
+        "id": 2,
         "username": "janedoe",
         "email": "jane@example.com",
         "role": "driver",
@@ -327,8 +354,8 @@ GET /api/rides/?status=en-route&rider_email=john@example.com&ordering=pickup_tim
       },
       "todays_ride_events": [
         {
-          "id_ride_event": 1,
-          "id_ride": 1,
+          "id": 1,
+          "ride": 1,
           "description": "Driver arrived at pickup",
           "created_at": "2025-10-31T09:30:00Z"
         }
@@ -340,41 +367,64 @@ GET /api/rides/?status=en-route&rider_email=john@example.com&ordering=pickup_tim
 ```
 
 **Example POST Request (Create Ride):**
-```json
-{
-  "status": "en-route",
-  "id_rider": 1,
-  "id_driver": 2,
-  "pickup_latitude": 37.7749,
-  "pickup_longitude": -122.4194,
-  "dropoff_latitude": 37.7849,
-  "dropoff_longitude": -122.4094,
-  "pickup_time": "2025-10-30T10:00:00Z"
-}
+```bash
+curl -X POST http://localhost:8000/api/rides/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "status": "requested",
+    "rider": 1,
+    "driver": 2,
+    "pickup_latitude": 37.7749,
+    "pickup_longitude": -122.4194,
+    "dropoff_latitude": 37.7849,
+    "dropoff_longitude": -122.4094,
+    "pickup_time": "2025-11-01T10:00:00Z"
+  }'
 ```
 
 ### Ride Events
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/ride-events/` | List all ride events |
+| GET | `/api/ride-events/?ride={ride_id}` | List ride events for a specific ride (ride filter required) |
 | POST | `/api/ride-events/` | Create a new ride event |
 | GET | `/api/ride-events/{id}/` | Get a specific ride event |
 | PUT | `/api/ride-events/{id}/` | Update a ride event |
 | PATCH | `/api/ride-events/{id}/` | Partially update a ride event |
 | DELETE | `/api/ride-events/{id}/` | Delete a ride event |
 
+**Important:** For performance reasons, the list endpoint requires filtering by ride ID using `?ride={ride_id}`. Listing all ride events without a filter will return an error.
+
 **RideEvent Fields:**
-- `id_ride_event` (read-only)
-- `id_ride` (integer, foreign key to Ride)
-- `description` (string)
-- `created_at` (read-only, auto-generated)
+- `id` (integer, read-only) - Auto-generated ride event ID
+- `ride` (integer, required) - Foreign key to Ride
+- `description` (string, required, max 255 chars) - Event description, cannot be empty or whitespace
+- `created_at` (datetime, read-only) - Auto-generated timestamp
+
+**Validation Rules:**
+- `description` is required and cannot be empty or contain only whitespace
+- Description is automatically trimmed of leading/trailing whitespace
+- Maximum 1000 events per ride (enforced when using `/api/rides/{id}/add_event/` endpoint)
 
 **Example POST Request:**
+```bash
+curl -X POST http://localhost:8000/api/ride-events/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "ride": 1,
+    "description": "Driver arrived at pickup location"
+  }'
+```
+
+**Example Response:**
 ```json
 {
-  "id_ride": 1,
-  "description": "Driver arrived at pickup location"
+  "id": 1,
+  "ride": 1,
+  "description": "Driver arrived at pickup location",
+  "created_at": "2025-10-31T09:30:00Z"
 }
 ```
 
@@ -385,17 +435,18 @@ All list endpoints support filtering, searching, and ordering:
 ### Users
 - **Filter by:** `role`, `email`, `username`
 - **Search in:** `username`, `first_name`, `last_name`, `email`, `phone_number`
-- **Order by:** `id_user`, `username`, `first_name`, `last_name`, `email`
+- **Order by:** `id`, `username`, `first_name`, `last_name`, `email`
+- Use `-` prefix for descending order (e.g., `-id`)
 
 Example: `/api/users/?role=rider&search=john&ordering=username`
 
 ### Rides (Optimized)
-- **Filter by:** 
+- **Filter by:**
   - `status` - Ride status (indexed for performance)
   - `rider_email` - Rider's email address (uses indexed email field)
-- **Order by:** 
+- **Order by:**
   - `pickup_time` - Sort by pickup time (indexed for performance)
-  - `distance` - Sort by distance to pickup (requires `latitude` and `longitude` params)
+  - `distance` or `distance_to_pickup` - Sort by distance to pickup (requires `latitude` and `longitude` params)
   - Use `-` prefix for descending order (e.g., `-pickup_time`)
 
 **Performance Notes:**
@@ -408,11 +459,12 @@ Example: `/api/rides/?status=en-route&rider_email=john@example.com&ordering=-pic
 Example with distance: `/api/rides/?latitude=37.7749&longitude=-122.4194&ordering=distance&page=1`
 
 ### Ride Events
-- **Filter by:** `id_ride`
+- **Filter by:** `ride` (required for list endpoint)
 - **Search in:** `description`
-- **Order by:** `id_ride_event`, `created_at`
+- **Order by:** `id`, `created_at`
+- Use `-` prefix for descending order (e.g., `-created_at`)
 
-Example: `/api/ride-events/?id_ride=1&ordering=-created_at`
+Example: `/api/ride-events/?ride=1&ordering=-created_at`
 
 ## Pagination
 

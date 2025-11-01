@@ -4,6 +4,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
     BaseUserManager,
 )
+from django.core.validators import RegexValidator
 
 
 class UserManager(BaseUserManager):
@@ -37,17 +38,31 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom User model representing riders, drivers, and admins"""
 
+    ROLE_CHOICES = [
+        ("admin", "Admin"),
+        ("rider", "Rider"),
+        ("driver", "Driver"),
+    ]
+
+    phone_regex = RegexValidator(
+        regex=r"^\+?1?\d{9,15}$",
+        message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.",
+    )
+
     id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     role = models.CharField(
         max_length=50,
         default="rider",
+        choices=ROLE_CHOICES,
         help_text="User role (e.g., 'admin', 'rider', 'driver')",
     )
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-    phone_number = models.CharField(max_length=20)
+    first_name = models.CharField(max_length=100, blank=False)
+    last_name = models.CharField(max_length=100, blank=False)
+    phone_number = models.CharField(
+        max_length=20, validators=[phone_regex], blank=False
+    )
 
     # Required for Django admin
     is_active = models.BooleanField(default=True)
