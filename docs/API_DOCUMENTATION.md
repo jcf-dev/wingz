@@ -38,16 +38,16 @@ python manage.py runserver
 
 The application uses `python-decouple` to manage environment variables. Configure the following variables in your `.env` file:
 
-| Variable | Description | Default Value |
-|----------|-------------|---------------|
-| `SECRET_KEY` | Django secret key for cryptographic signing | `django-insecure-change-this-in-production` |
-| `DEBUG` | Enable/disable debug mode (1 for True, 0 for False) | `True` |
-| `DJANGO_ALLOWED_HOSTS` | Comma-separated list of allowed hosts | `localhost,127.0.0.1` |
-| `POSTGRES_DB` | PostgreSQL database name | `wbsm_db` |
-| `POSTGRES_USER` | PostgreSQL username | `admin` |
-| `POSTGRES_PASSWORD` | PostgreSQL password | `admin` |
-| `POSTGRES_SERVER` | PostgreSQL server host | `db` |
-| `POSTGRES_PORT` | PostgreSQL server port | `5432` |
+| Variable | Description |
+|----------|-------------|
+| `SECRET_KEY` | Django secret key for cryptographic signing |
+| `DEBUG` | Enable/disable debug mode (1 for True, 0 for False) |
+| `DJANGO_ALLOWED_HOSTS` | Comma-separated list of allowed hosts |
+| `POSTGRES_DB` | PostgreSQL database name |
+| `POSTGRES_USER` | PostgreSQL username |
+| `POSTGRES_PASSWORD` | PostgreSQL password |
+| `POSTGRES_SERVER` | PostgreSQL server host |
+| `POSTGRES_PORT` | PostgreSQL server port |
 
 **Note:** For production, always use strong, unique values for `SECRET_KEY` and database credentials.
 
