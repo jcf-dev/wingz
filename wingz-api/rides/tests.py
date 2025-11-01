@@ -335,17 +335,33 @@ class RideEventAPITest(APITestCase):
         self.list_url = reverse("rideevent-list")
         self.detail_url = reverse("rideevent-detail", kwargs={"pk": self.event.id})
 
-    def test_get_ride_event_list_without_filter(self):
-        """Test that listing all ride events without filter is not allowed"""
+    def test_get_ride_event_list_disabled(self):
+        """Test that listing all ride events is disabled"""
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
 
-    def test_get_ride_event_list_with_filter(self):
-        """Test retrieving list of ride events with ride filter"""
-        response = self.client.get(self.list_url, {"ride": self.ride.id})
+    def test_get_all_ride_events_for_ride(self):
+        """Test retrieving all ride events for a specific ride using ride_id"""
+        # Create additional events for the same ride
+        RideEvent.objects.create(ride=self.ride, description="Second event")
+        RideEvent.objects.create(ride=self.ride, description="Third event")
+
+        # Use the ride ID in the URL to get all events
+        url = reverse("rideevent-detail", kwargs={"pk": self.ride.id})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("results", response.data)
+
+        # Should return a list of events, not paginated
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 3)
+
+    def test_get_ride_events_for_nonexistent_ride(self):
+        """Test that requesting events for a non-existent ride returns 404"""
+        url = reverse("rideevent-detail", kwargs={"pk": 99999})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("error", response.data)
 
     def test_create_ride_event(self):
         """Test creating a new ride event"""
@@ -353,14 +369,6 @@ class RideEventAPITest(APITestCase):
         response = self.client.post(self.list_url, event_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(RideEvent.objects.count(), 2)
-
-    def test_get_ride_event_detail(self):
-        """Test retrieving a specific ride event"""
-        response = self.client.get(self.detail_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            response.data["description"], "Driver arrived at pickup location"
-        )
 
     def test_update_ride_event(self):
         """Test updating a ride event with PUT"""
@@ -385,8 +393,8 @@ class RideEventAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(RideEvent.objects.count(), 0)
 
-    def test_filter_ride_events_by_ride(self):
-        """Test filtering ride events by ride"""
+    def test_ride_events_isolated_by_ride(self):
+        """Test that retrieving events for one ride doesn't include events from another ride"""
         # Create another ride and event
         other_ride = Ride.objects.create(
             status="pickup",
@@ -400,25 +408,33 @@ class RideEventAPITest(APITestCase):
         )
         RideEvent.objects.create(ride=other_ride, description="Other ride event")
 
-        response = self.client.get(self.list_url, {"ride": self.ride.id})
+        # Get events for the first ride
+        url = reverse("rideevent-detail", kwargs={"pk": self.ride.id})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 1)
-
-    def test_search_ride_events(self):
-        """Test searching ride events by description with ride filter"""
-        response = self.client.get(
-            self.list_url, {"ride": self.ride.id, "search": "arrived"}
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(
+            response.data[0]["description"], "Driver arrived at pickup location"
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(response.data["count"], 1)
 
-    def test_ordering_ride_events(self):
-        """Test ordering ride events with ride filter"""
-        RideEvent.objects.create(ride=self.ride, description="Second event")
-
-        response = self.client.get(
-            self.list_url, {"ride": self.ride.id, "ordering": "-created_at"}
+    def test_ride_events_ordered_by_created_at(self):
+        """Test that ride events are returned in descending order (newest first)"""
+        # Create additional events with slight delays
+        second_event = RideEvent.objects.create(
+            ride=self.ride, description="Second event"
         )
+        third_event = RideEvent.objects.create(
+            ride=self.ride, description="Third event"
+        )
+
+        url = reverse("rideevent-detail", kwargs={"pk": self.ride.id})
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        results = response.data["results"]
-        self.assertEqual(results[0]["description"], "Second event")
+
+        # Events should be in descending order (newest first)
+        self.assertEqual(len(response.data), 3)
+        self.assertEqual(response.data[0]["description"], "Third event")
+        self.assertEqual(response.data[1]["description"], "Second event")
+        self.assertEqual(
+            response.data[2]["description"], "Driver arrived at pickup location"
+        )
