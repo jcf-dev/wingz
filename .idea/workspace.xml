@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="feb9958b-bb93-41da-9d25-21d7c67af4df" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/load_dummy_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/load_dummy_data.py" afterDir="false" />
-    </list>
+    <list default="true" id="feb9958b-bb93-41da-9d25-21d7c67af4df" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -247,7 +244,7 @@
       <workItem from="1761694835712" duration="311000" />
       <workItem from="1761705725637" duration="7619000" />
       <workItem from="1761915532836" duration="12441000" />
-      <workItem from="1761967637438" duration="595000" />
+      <workItem from="1761967637438" duration="941000" />
     </task>
     <servers />
   </component>
@@ -269,6 +266,6 @@
     <SUITE FILE_PATH="coverage/wingz$test_api.coverage" NAME="test_api Coverage Results" MODIFIED="1761790988247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/wingz$Test__users_tests_UserModelTest.coverage" NAME="Test: users.tests.UserModelTest Coverage Results" MODIFIED="1761793842604" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/wingz$test_authentication.coverage" NAME="test_authentication Coverage Results" MODIFIED="1761793698864" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/wingz$load_dummy_data.coverage" NAME="load_dummy_data Coverage Results" MODIFIED="1761967807263" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/wingz-api" />
+    <SUITE FILE_PATH="coverage/wingz$load_dummy_data.coverage" NAME="load_dummy_data Coverage Results" MODIFIED="1761968322713" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/wingz-api" />
   </component>
 </project>
