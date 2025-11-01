@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="feb9958b-bb93-41da-9d25-21d7c67af4df" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wingz-api/load_dummy_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/wingz-api/load_dummy_data.py" afterDir="false" />
-    </list>
+    <list default="true" id="feb9958b-bb93-41da-9d25-21d7c67af4df" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -247,7 +244,7 @@
       <workItem from="1761694835712" duration="311000" />
       <workItem from="1761705725637" duration="7619000" />
       <workItem from="1761915532836" duration="12441000" />
-      <workItem from="1761967637438" duration="1977000" />
+      <workItem from="1761967637438" duration="2685000" />
     </task>
     <servers />
   </component>
