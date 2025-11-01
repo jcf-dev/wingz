@@ -181,26 +181,65 @@ def create_rides_and_events(riders, drivers, num_rides=1000):
         rider = choice(riders)
         driver = choice(drivers)
 
-        # Random status (most rides should be completed)
-        status = choice(
-            [
-                "requested",
-                "accepted",
-                "en-route",
-                "pickup",
-                "in-progress",
-                "completed",
-                "cancelled",
-            ]
-        )
-
         # Generate pickup and dropoff coordinates
         pickup_lat, pickup_lon = generate_coordinates()
         dropoff_lat, dropoff_lon = generate_coordinates()
 
-        # Create ride
+        # Determine final outcome: 80% completed, 20% cancelled
+        will_complete = randint(1, 100) <= 80
+
+        # Build sequential event flow
+        event_sequence = []
+        status_sequence = []
+
+        # All rides start with requested
+        event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["requested"]))
+        status_sequence.append("requested")
+
+        if will_complete:
+            # Complete flow: requested → accepted → en-route → pickup → in-progress → completed
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["accepted"]))
+            status_sequence.append("accepted")
+
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["en-route"]))
+            status_sequence.append("en-route")
+
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["pickup"]))
+            status_sequence.append("pickup")
+
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["in-progress"]))
+            status_sequence.append("in-progress")
+
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["completed"]))
+            status_sequence.append("completed")
+
+            final_status = "completed"
+        else:
+            # Cancelled flow: can be cancelled after requested, accepted, or en-route
+            cancellation_point = choice(["after_requested", "after_accepted", "after_en_route"])
+
+            if cancellation_point == "after_requested":
+                # Cancel immediately after requested
+                pass
+            elif cancellation_point == "after_accepted":
+                # Cancel after accepted
+                event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["accepted"]))
+                status_sequence.append("accepted")
+            else:  # after_en_route
+                # Cancel after en-route
+                event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["accepted"]))
+                status_sequence.append("accepted")
+                event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["en-route"]))
+                status_sequence.append("en-route")
+
+            # Add cancellation event
+            event_sequence.append(choice(RIDE_EVENTS_BY_STATUS["cancelled"]))
+            status_sequence.append("cancelled")
+            final_status = "cancelled"
+
+        # Create ride with final status
         ride = Ride.objects.create(
-            status=status,
+            status=final_status,
             rider=rider,
             driver=driver,
             pickup_latitude=pickup_lat,
@@ -211,36 +250,29 @@ def create_rides_and_events(riders, drivers, num_rides=1000):
         )
         rides_created += 1
 
-        # Create events for this ride
-        event_descriptions = RIDE_EVENTS_BY_STATUS.get(status, ["Ride event"])
+        # Create events with proper timing
+        # Calculate time intervals between events
+        total_duration_minutes = randint(30, 300)  # 30 mins to 5 hours
+        num_events = len(event_sequence)
 
-        # Generate ride duration between 30 minutes and 5 hours
-        ride_duration_minutes = randint(30, 300)  # 30 mins to 5 hours
-
-        # Create 1-4 events per ride
-        num_events = randint(1, min(4, len(event_descriptions)))
-        event_time = pickup_time
-
-        # Distribute events across the ride duration
         if num_events > 1:
-            time_between_events = ride_duration_minutes / (num_events - 1)
+            time_between_events = total_duration_minutes / (num_events - 1)
         else:
-            time_between_events = ride_duration_minutes
+            time_between_events = 0
 
-        for j in range(num_events):
-            description = event_descriptions[min(j, len(event_descriptions) - 1)]
-
-            # For first event, use pickup time; for others, distribute across duration
-            if j > 0:
-                event_time = pickup_time + timedelta(
-                    minutes=int(time_between_events * j)
-                )
-
+        event_time = pickup_time
+        for j, description in enumerate(event_sequence):
             event = RideEvent.objects.create(ride=ride, description=description)
             # Manually set created_at to match the ride timeline
             event.created_at = event_time
             event.save()
             events_created += 1
+
+            # Increment time for next event
+            if j < num_events - 1:
+                event_time = event_time + timedelta(
+                    minutes=int(time_between_events)
+                )
 
         if (i + 1) % 100 == 0:
             print(f"  Created {i + 1}/{num_rides} rides with events...")
