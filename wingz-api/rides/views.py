@@ -143,13 +143,13 @@ class RideEventViewSet(viewsets.ModelViewSet):
 
     Provides:
     - create: Create a new ride event
-    - retrieve: Get a specific ride event
+    - retrieve: Get all ride events for a specific ride (accepts ride_id)
     - update: Update a ride event
     - partial_update: Partially update a ride event
     - destroy: Delete a ride event
 
-    Note: List action is disabled for performance reasons. Use ride-specific
-    queries through the Ride detail endpoint or filter by ride ID.
+    Note: List action is disabled for performance reasons. Use the retrieve
+    endpoint with a ride ID to get all events for a specific ride.
     """
 
     queryset = RideEvent.objects.select_related("ride").all()
@@ -164,18 +164,37 @@ class RideEventViewSet(viewsets.ModelViewSet):
     ordering_fields = ["id", "created_at"]
     ordering = ["-created_at"]
 
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve all ride events for a specific ride.
+        Accepts ride_id as the URL parameter.
+        """
+        ride_id = kwargs.get("pk")
+
+        # Verify that the ride exists
+        try:
+            ride = Ride.objects.get(pk=ride_id)
+        except Ride.DoesNotExist:
+            return Response(
+                {"error": f"Ride with id {ride_id} does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Get all events for this ride
+        events = RideEvent.objects.filter(ride_id=ride_id).order_by("-created_at")
+        serializer = self.get_serializer(events, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def list(self, request, *args, **kwargs):
         """
         Disable listing all ride events for performance reasons.
-        Clients must filter by specific ride ID.
+        Use the retrieve endpoint with a ride ID instead.
         """
-        ride_filter = request.query_params.get("ride", None)
-        if not ride_filter:
-            return Response(
-                {
-                    "error": "Listing all ride events is not supported for performance reasons. "
-                    "Please filter by ride ID using ?ride=<ride_id>"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return super().list(request, *args, **kwargs)
+        return Response(
+            {
+                "error": "Listing all ride events is not supported for performance reasons. "
+                "Please use /api/ride-events/{ride_id}/ to get all events for a specific ride."
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )

@@ -387,14 +387,13 @@ curl -X POST http://localhost:8000/api/rides/ \
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/ride-events/?ride={ride_id}` | List ride events for a specific ride (ride filter required) |
+| GET | `/api/ride-events/{ride_id}/` | Get all ride events for a specific ride |
 | POST | `/api/ride-events/` | Create a new ride event |
-| GET | `/api/ride-events/{id}/` | Get a specific ride event |
-| PUT | `/api/ride-events/{id}/` | Update a ride event |
-| PATCH | `/api/ride-events/{id}/` | Partially update a ride event |
-| DELETE | `/api/ride-events/{id}/` | Delete a ride event |
+| PUT | `/api/ride-events/{event_id}/` | Update a ride event |
+| PATCH | `/api/ride-events/{event_id}/` | Partially update a ride event |
+| DELETE | `/api/ride-events/{event_id}/` | Delete a ride event |
 
-**Important:** For performance reasons, the list endpoint requires filtering by ride ID using `?ride={ride_id}`. Listing all ride events without a filter will return an error.
+**Important:** For performance reasons, the list endpoint is disabled. Use the retrieve endpoint `/api/ride-events/{ride_id}/` to get all events for a specific ride.
 
 **RideEvent Fields:**
 - `id` (integer, read-only) - Auto-generated ride event ID
@@ -407,7 +406,37 @@ curl -X POST http://localhost:8000/api/rides/ \
 - Description is automatically trimmed of leading/trailing whitespace
 - Maximum 1000 events per ride (enforced when using `/api/rides/{id}/add_event/` endpoint)
 
-**Example POST Request:**
+**Example GET Request (Get all events for a ride):**
+```bash
+curl -X GET http://localhost:8000/api/ride-events/1/ \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Example GET Response:**
+```json
+[
+  {
+    "id": 3,
+    "ride": 1,
+    "description": "Passenger dropped off",
+    "created_at": "2025-10-31T10:30:00Z"
+  },
+  {
+    "id": 2,
+    "ride": 1,
+    "description": "Passenger picked up",
+    "created_at": "2025-10-31T10:00:00Z"
+  },
+  {
+    "id": 1,
+    "ride": 1,
+    "description": "Driver arrived at pickup location",
+    "created_at": "2025-10-31T09:30:00Z"
+  }
+]
+```
+
+**Example POST Request (Create new event):**
 ```bash
 curl -X POST http://localhost:8000/api/ride-events/ \
   -H "Content-Type: application/json" \
@@ -418,7 +447,7 @@ curl -X POST http://localhost:8000/api/ride-events/ \
   }'
 ```
 
-**Example Response:**
+**Example POST Response:**
 ```json
 {
   "id": 1,
@@ -459,12 +488,11 @@ Example: `/api/rides/?status=en-route&rider_email=john@example.com&ordering=-pic
 Example with distance: `/api/rides/?latitude=37.7749&longitude=-122.4194&ordering=distance&page=1`
 
 ### Ride Events
-- **Filter by:** `ride` (required for list endpoint)
-- **Search in:** `description`
-- **Order by:** `id`, `created_at`
-- Use `-` prefix for descending order (e.g., `-created_at`)
+- The list endpoint is disabled for performance reasons
+- Use `/api/ride-events/{ride_id}/` to get all events for a specific ride
+- Events are returned ordered by `created_at` in descending order (newest first)
 
-Example: `/api/ride-events/?ride=1&ordering=-created_at`
+Example: `/api/ride-events/1/`
 
 ## Pagination
 
