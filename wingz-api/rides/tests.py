@@ -280,6 +280,261 @@ class RideAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(RideEvent.objects.filter(ride=self.ride).count(), 1)
 
+    def test_distance_sorting_ascending(self):
+        """Test sorting rides by distance in ascending order (closest first)"""
+        # Create rides at different distances from a reference point
+        # Reference point: San Francisco (37.7749, -122.4194)
+
+        # Ride 1: Very close (~0.5 km away)
+        ride1 = Ride.objects.create(
+            status="pickup",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.7800,
+            pickup_longitude=-122.4200,
+            dropoff_latitude=37.7900,
+            dropoff_longitude=-122.4100,
+            pickup_time=timezone.now(),
+        )
+
+        # Ride 2: Medium distance (~5 km away)
+        ride2 = Ride.objects.create(
+            status="pickup",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.8200,
+            pickup_longitude=-122.4700,
+            dropoff_latitude=37.8300,
+            dropoff_longitude=-122.4600,
+            pickup_time=timezone.now(),
+        )
+
+        # Ride 3: Far distance (~15 km away)
+        ride3 = Ride.objects.create(
+            status="pickup",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.9000,
+            pickup_longitude=-122.5500,
+            dropoff_latitude=37.9100,
+            dropoff_longitude=-122.5400,
+            pickup_time=timezone.now(),
+        )
+
+        # Request with distance sorting (ascending)
+        response = self.client.get(
+            self.list_url,
+            {
+                "latitude": 37.7749,
+                "longitude": -122.4194,
+                "ordering": "distance_to_pickup",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data["results"]
+
+        # Should have 4 rides total (including the one from setUp)
+        self.assertEqual(len(results), 4)
+
+        # Verify rides are sorted by distance (ascending)
+        # The order should be: self.ride (0 km - same as reference), ride1 (closest), ride2, ride3 (farthest)
+        self.assertEqual(results[0]["id"], self.ride.id)
+        self.assertEqual(results[1]["id"], ride1.id)
+        self.assertEqual(results[2]["id"], ride2.id)
+        self.assertEqual(results[3]["id"], ride3.id)
+
+        # Verify distance field is included in response
+        self.assertIn("distance_to_pickup", results[0])
+        self.assertIsNotNone(results[0]["distance_to_pickup"])
+
+    def test_distance_sorting_descending(self):
+        """Test sorting rides by distance in descending order (farthest first)"""
+        # Create rides at different distances
+        ride1 = Ride.objects.create(
+            status="pickup",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.7800,
+            pickup_longitude=-122.4200,
+            dropoff_latitude=37.7900,
+            dropoff_longitude=-122.4100,
+            pickup_time=timezone.now(),
+        )
+
+        ride2 = Ride.objects.create(
+            status="pickup",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.9000,
+            pickup_longitude=-122.5500,
+            dropoff_latitude=37.9100,
+            dropoff_longitude=-122.5400,
+            pickup_time=timezone.now(),
+        )
+
+        # Request with distance sorting (descending)
+        response = self.client.get(
+            self.list_url,
+            {
+                "latitude": 37.7749,
+                "longitude": -122.4194,
+                "ordering": "-distance_to_pickup",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data["results"]
+
+        # Verify rides are sorted by distance (descending)
+        # Order should be: ride2 (farthest), ride1, self.ride (closest - distance 0)
+        self.assertEqual(results[0]["id"], ride2.id)
+        self.assertEqual(results[1]["id"], ride1.id)
+        self.assertEqual(results[2]["id"], self.ride.id)
+
+    def test_distance_sorting_with_alias(self):
+        """Test that 'distance' works as an alias for 'distance_to_pickup'"""
+        Ride.objects.create(
+            status="pickup",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.7800,
+            pickup_longitude=-122.4200,
+            dropoff_latitude=37.7900,
+            dropoff_longitude=-122.4100,
+            pickup_time=timezone.now(),
+        )
+
+        # Request with 'distance' alias
+        response = self.client.get(
+            self.list_url,
+            {"latitude": 37.7749, "longitude": -122.4194, "ordering": "distance"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data["results"]
+
+        # Should work the same as 'distance_to_pickup'
+        self.assertGreater(len(results), 0)
+        self.assertIn("distance_to_pickup", results[0])
+
+    def test_distance_calculation_accuracy(self):
+        """Test that distance calculation using Haversine formula is reasonably accurate"""
+        # Create a ride at a known distance
+        # San Francisco to Oakland (~13-14 km)
+        ride_oakland = Ride.objects.create(
+            status="pickup",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.8044,  # Oakland coordinates
+            pickup_longitude=-122.2712,
+            dropoff_latitude=37.8100,
+            dropoff_longitude=-122.2600,
+            pickup_time=timezone.now(),
+        )
+
+        # Request with San Francisco coordinates
+        response = self.client.get(
+            self.list_url,
+            {
+                "latitude": 37.7749,  # San Francisco
+                "longitude": -122.4194,
+                "ordering": "distance_to_pickup",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data["results"]
+
+        # Find the Oakland ride in results
+        oakland_result = next(r for r in results if r["id"] == ride_oakland.id)
+        distance = oakland_result["distance_to_pickup"]
+
+        # Distance should be approximately 13-14 km (allowing some margin)
+        self.assertGreater(distance, 11)
+        self.assertLess(distance, 16)
+
+    def test_distance_sorting_without_coordinates(self):
+        """Test that API works normally when no coordinates are provided"""
+        response = self.client.get(self.list_url, {"ordering": "pickup_time"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data["results"]
+
+        # Should not have distance_to_pickup field when coordinates not provided
+        if len(results) > 0:
+            self.assertNotIn("distance_to_pickup", results[0])
+
+    def test_distance_sorting_with_invalid_coordinates(self):
+        """Test that invalid coordinates don't break the API"""
+        # Test with invalid latitude
+        response = self.client.get(
+            self.list_url,
+            {
+                "latitude": "invalid",
+                "longitude": -122.4194,
+                "ordering": "distance_to_pickup",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Test with out-of-range latitude
+        response = self.client.get(
+            self.list_url,
+            {"latitude": 200, "longitude": -122.4194, "ordering": "distance_to_pickup"},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Test with missing longitude
+        response = self.client.get(
+            self.list_url, {"latitude": 37.7749, "ordering": "distance_to_pickup"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_distance_sorting_combined_with_status_filter(self):
+        """Test that distance sorting works correctly with status filtering"""
+        # Create rides with different statuses and locations
+        ride_pickup = Ride.objects.create(
+            status="pickup",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.7800,
+            pickup_longitude=-122.4200,
+            dropoff_latitude=37.7900,
+            dropoff_longitude=-122.4100,
+            pickup_time=timezone.now(),
+        )
+
+        Ride.objects.create(
+            status="en-route",
+            rider=self.rider,
+            driver=self.driver,
+            pickup_latitude=37.8200,
+            pickup_longitude=-122.4700,
+            dropoff_latitude=37.8300,
+            dropoff_longitude=-122.4600,
+            pickup_time=timezone.now(),
+        )
+
+        # Filter by status and sort by distance
+        response = self.client.get(
+            self.list_url,
+            {
+                "status": "pickup",
+                "latitude": 37.7749,
+                "longitude": -122.4194,
+                "ordering": "distance_to_pickup",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = response.data["results"]
+
+        # Should only return 'pickup' status rides
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["status"], "pickup")
+        self.assertEqual(results[0]["id"], ride_pickup.id)
+
 
 class RideEventAPITest(APITestCase):
     """Test cases for RideEvent API endpoints"""
@@ -420,12 +675,8 @@ class RideEventAPITest(APITestCase):
     def test_ride_events_ordered_by_created_at(self):
         """Test that ride events are returned in descending order (newest first)"""
         # Create additional events with slight delays
-        second_event = RideEvent.objects.create(
-            ride=self.ride, description="Second event"
-        )
-        third_event = RideEvent.objects.create(
-            ride=self.ride, description="Third event"
-        )
+        RideEvent.objects.create(ride=self.ride, description="Second event")
+        RideEvent.objects.create(ride=self.ride, description="Third event")
 
         url = reverse("rideevent-detail", kwargs={"pk": self.ride.id})
         response = self.client.get(url)
